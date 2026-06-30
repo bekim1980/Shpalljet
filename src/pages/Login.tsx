@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
+import { oauthAuth } from "@/integrations/oauthAuth";
+import { setAuthReturnTo } from "@/pages/AuthCallback";
 import { toast } from "sonner";
 
 const RETURNING_KEY = "shpalljet:hasLoggedInBefore";
@@ -74,7 +75,8 @@ const Login = () => {
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setSocialLoading(provider);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+      setAuthReturnTo(from);
+      const result = await oauthAuth.signInWithOAuth(provider);
       if (result.redirected) {
         markReturning();
         return;

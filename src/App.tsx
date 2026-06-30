@@ -18,6 +18,7 @@ import SearchResults from "./pages/SearchResults.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 import Orders from "./pages/Orders.tsx";
+import AuthCallback from "./pages/AuthCallback.tsx";
 import Install from "./pages/Install.tsx";
 import Analytics from "./pages/Analytics.tsx";
 import Insights from "./pages/Insights.tsx";
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="/index" element={<Homepage />} />
                   <Route path="/browse" element={<Index />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/p/:slug" element={<ProductDetail />} />
                   <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
