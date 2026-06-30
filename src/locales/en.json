@@ -479,7 +479,7 @@
       "Write a listing for my couch"
     ],
     "rateLimit": "Too many requests — please wait a moment.",
-    "creditsOut": "AI credits are exhausted. Top up in Lovable workspace.",
+    "creditsOut": "AI credits are exhausted. Top up your AI provider account.",
     "error": "Something went wrong. Try again.",
     "helperTitle": "AI Listing Helper",
     "helperCta": "Improve with AI",
@@ -493,5 +493,34 @@
     "askAi": "Ask AI",
     "unavailable": "AI suggestions unavailable. You can continue filling in the form manually.",
     "retry": "Retry"
+  },
+  "aiListing": {
+    "title": "AI Listing Creator",
+    "entryCta": "✨ Create Listing with AI",
+    "entrySubtitle": "Upload photos — AI fills title, description, category & more",
+    "uploadHint": "Add 1–10 clear photos of your item. More angles help accuracy.",
+    "analyzeCta": "Analyze {{count}} photo(s)",
+    "analyzingTitle": "AI is analyzing your photos",
+    "analyzingSubtitle": "This usually takes 3–8 seconds",
+    "stepProgress": "Step {{current}} of {{total}}",
+    "analysisFailed": "Analysis failed. Try again or use manual listing.",
+    "recognizedAs": "Recognized as",
+    "lowConfidenceHint": "Please verify details below — AI is not fully certain.",
+    "cover": "Cover",
+    "model": "Model",
+    "specifications": "Specifications",
+    "uncertainSpecs": "Low-confidence specs are omitted. Add details in the description if needed.",
+    "tags": "Search tags",
+    "priceManual": "You set the price — AI never suggests prices",
+    "locationManual": "Choose your location before publishing",
+    "back": "Back",
+    "steps": {
+      "identifying": "Identifying item…",
+      "brand": "Recognizing brand…",
+      "attributes": "Analyzing attributes…",
+      "title": "Generating title…",
+      "description": "Writing description…",
+      "preparing": "Preparing listing…"
+    }
   }
 }

@@ -8,6 +8,7 @@ import TrendingSection from "@/components/TrendingSection";
 import { useVertical, type Vertical } from "@/contexts/VerticalContext";
 import { useVerticalCounts } from "@/hooks/useVerticalCounts";
 import SEO from "@/components/SEO";
+import { SITE_URL } from "@/lib/seoImage";
 
 const verticalIcons: Record<Vertical, { icon: React.ElementType; gradient: string; iconBg: string }> = {
   luxe: { icon: Crown, gradient: "from-amber-800 via-amber-900/85 to-stone-900", iconBg: "bg-amber-400/20 text-amber-300" },
@@ -51,7 +52,7 @@ const Homepage = () => {
       <SEO
         title="Shpalljet — Marketplace për Shqipëri, Kosovë, Maqedoni & Diasporë"
         description="Bli, shit, jep me qira dhe gjej shërbime, punë e udhëtime në një marketplace modern për shqiptarët kudo."
-        canonical="https://shpalljet.lovable.app/"
+        canonical={`${SITE_URL}/`}
       />
       <Header />
 

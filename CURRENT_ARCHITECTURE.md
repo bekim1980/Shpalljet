@@ -7,10 +7,10 @@
 - **State / Data**: `@tanstack/react-query`, React Context for cross-cutting
   state (`AuthProvider`, `VerticalProvider`, `LocaleProvider`)
 - **Routing**: `react-router-dom` (BrowserRouter, SPA fallback handled by
-  Lovable hosting)
+  Vercel hosting)
 - **i18n**: `react-i18next` (`src/locales/{sq,en}.json`)
 - **PWA**: `vite-plugin-pwa` (autoUpdate, workbox precache)
-- **Backend**: Lovable Cloud (Supabase) — Auth, Postgres + RLS, Storage,
+- **Backend**: Supabase — Auth, Postgres + RLS, Storage,
   Edge Functions, Realtime
 
 ## App entry
@@ -74,7 +74,7 @@ Slugs: `luxe`, `market`, `rent`, `services`, `jobs`, plus `xhiro` for rides.
   `src/components/product/{ImageCarousel,FullscreenViewer,SafeImage}.tsx`.
 
 ## Edge functions
-- `ai-assistant` — `verify_jwt = false` (Lovable AI Gateway).
+- `ai-assistant` — `verify_jwt = false` (external AI provider gateway).
 - `expire-listings` — cron-style cleanup, `verify_jwt = false`.
 - `saved-search-runner` — runs saved searches.
 

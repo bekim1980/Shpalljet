@@ -476,7 +476,7 @@
       "Shkruaj një shpallje për divanin tim"
     ],
     "rateLimit": "Shumë kërkesa — prit pak.",
-    "creditsOut": "Kreditet e AI mbaruan. Shto në workspace Lovable.",
+    "creditsOut": "Kreditet e AI mbaruan. Shto kredite te ofruesi i AI.",
     "error": "Diçka shkoi keq. Provo përsëri.",
     "helperTitle": "Ndihmës AI për Shpalljen",
     "helperCta": "Përmirëso me AI",
@@ -490,5 +490,34 @@
     "askAi": "Pyet AI",
     "unavailable": "Sugjerimet e AI nuk janë të disponueshme. Mund të vazhdoni të plotësoni formularin manualisht.",
     "retry": "Provo përsëri"
+  },
+  "aiListing": {
+    "title": "Krijuesi AI i Shpalljeve",
+    "entryCta": "✨ Krijo Shpallje me AI",
+    "entrySubtitle": "Ngarko foto — AI plotëson titullin, përshkrimin, kategorinë e më shumë",
+    "uploadHint": "Shto 1–10 foto të qarta të artikullit. Më shumë kënde ndihmojnë saktësinë.",
+    "analyzeCta": "Analizo {{count}} foto",
+    "analyzingTitle": "AI po analizon fotot",
+    "analyzingSubtitle": "Zakonisht zgjat 3–8 sekonda",
+    "stepProgress": "Hapi {{current}} nga {{total}}",
+    "analysisFailed": "Analiza dështoi. Provo përsëri ose përdor formularin manual.",
+    "recognizedAs": "Identifikuar si",
+    "lowConfidenceHint": "Verifiko detajet më poshtë — AI nuk është plotësisht i sigurt.",
+    "cover": "Kryesore",
+    "model": "Modeli",
+    "specifications": "Specifikimet",
+    "uncertainSpecs": "Specifikimet me besueshmëri të ulët janë hequr. Shto detaje në përshkrim nëse nevojitet.",
+    "tags": "Etiketa kërkimi",
+    "priceManual": "Ti vendos çmimin — AI nuk sugjeron kurrë çmime",
+    "locationManual": "Zgjidh vendndodhjen para publikimit",
+    "back": "Kthehu",
+    "steps": {
+      "identifying": "Duke identifikuar artikullin…",
+      "brand": "Duke njohur markën…",
+      "attributes": "Duke analizuar atributet…",
+      "title": "Duke gjeneruar titullin…",
+      "description": "Duke shkruar përshkrimin…",
+      "preparing": "Duke përgatitur shpalljen…"
+    }
   }
 }

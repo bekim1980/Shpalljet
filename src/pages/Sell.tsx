@@ -24,7 +24,10 @@ import { VERTICAL_CATEGORIES, CONDITIONS, PRICE_PERIODS, CONTACT_METHODS, JOB_TY
 import { useDraftListing } from "@/hooks/useDraftListing";
 import { useCategories } from "@/hooks/useCategories";
 import SmartListingHelper, { type ListingSuggestion } from "@/components/ai/SmartListingHelper";
-import { ENABLE_AI_ASSISTANT } from "@/config/features";
+import AiListingCreator from "@/components/ai/aiListing/AiListingCreator";
+import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/features";
+import { enrichDescriptionWithAiMeta } from "@/lib/aiListingMapper";
+import type { AiListingAnalysis } from "@/types/aiListing";
 
 const verticalIcons: Record<Vertical, React.ElementType> = { luxe: Crown, market: Store, rent: Home, services: Briefcase, jobs: BriefcaseBusiness };
 const contactIcons: Record<string, React.ElementType> = { chat: MessageSquare, phone: Phone, whatsapp: Send, viber: Phone };
@@ -55,7 +58,7 @@ const compressImage = (file: File, maxDim: number, quality: number): Promise<Blo
 const Sell = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currency: defaultCurrency } = useLocale();
   const { draft, updateDraft, clearDraft } = useDraftListing();
   const queryClient = useQueryClient();
@@ -65,6 +68,7 @@ const Sell = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [creationMode, setCreationMode] = useState<"manual" | "ai">("manual");
 
   if (authLoading) return null;
   if (!user) {
@@ -81,7 +85,9 @@ const Sell = () => {
 
   const handleImagesChange = (newImages: File[], newPreviews: string[]) => { setImages(newImages); setPreviews(newPreviews); };
 
-  const validate = (): boolean => {
+  const categoryIdForSlug = (slug: string) => dbCategories?.find((c) => c.slug === slug)?.id ?? "";
+
+  const validate = (_opts?: { fromAi?: boolean }): boolean => {
     const errs: Record<string, string> = {};
     if (!draft.selectedVertical) errs.vertical = t("sell.selectSection");
     if (!draft.title.trim()) errs.title = t("sell.titleRequired");
@@ -105,11 +111,24 @@ const Sell = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) { toast.error(t("sell.fillRequired")); return; }
+  const handleSubmit = async (e?: React.FormEvent, aiMeta?: AiListingAnalysis | null, missingAnswers?: Record<string, string>) => {
+    e?.preventDefault();
+    if (!validate({ fromAi: !!aiMeta })) { toast.error(t("sell.fillRequired")); return; }
     setSubmitting(true);
     try {
+      let description = draft.description.trim();
+      if (aiMeta) {
+        const extraAttrs = [
+          ...aiMeta.attributes.filter((a) => a.confidence >= 50),
+          ...Object.entries(missingAnswers ?? {})
+            .filter(([, v]) => v.trim())
+            .map(([key, value]) => ({ key, value })),
+        ];
+        if (aiMeta.model?.trim()) {
+          extraAttrs.push({ key: "model", value: aiMeta.model });
+        }
+        description = enrichDescriptionWithAiMeta(description, aiMeta.tags, extraAttrs);
+      }
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
@@ -132,7 +151,7 @@ const Sell = () => {
       const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
 
       const insertData: any = {
-        seller_id: user.id, title: draft.title.trim(), description: draft.description.trim(),
+        seller_id: user.id, title: draft.title.trim(), description,
         price: parseFloat(draft.price) || 0, category: draft.category, category_id: draft.categoryId || null,
         vertical: draft.selectedVertical, image_urls: imageUrls, location: draft.location.trim() || null,
         contact_method: draft.contactMethod, currency: draft.currency || defaultCurrency,
@@ -163,6 +182,7 @@ const Sell = () => {
       const { error } = await supabase.from("products").insert(insertData);
       if (error) throw error;
       clearDraft();
+      setCreationMode("manual");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["my-listings"] });
       queryClient.invalidateQueries({ queryKey: ["trending-preview"] });
@@ -182,7 +202,45 @@ const Sell = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="font-display text-2xl font-bold mb-1">{t("sell.title")}</h1>
           <p className="text-muted-foreground text-sm mb-6">{t("sell.subtitle")}</p>
-          <form onSubmit={handleSubmit} className="space-y-5">
+
+          {ENABLE_AI_LISTING_CREATOR && creationMode === "manual" && (
+            <button
+              type="button"
+              onClick={() => setCreationMode("ai")}
+              className="w-full mb-6 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent p-4 text-left transition-all hover:border-primary/50 hover:shadow-md active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/20">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display font-bold text-base">{t("aiListing.entryCta")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("aiListing.entrySubtitle")}</p>
+                </div>
+                <Sparkles className="h-4 w-4 text-primary/60 shrink-0" />
+              </div>
+            </button>
+          )}
+
+          {ENABLE_AI_LISTING_CREATOR && creationMode === "ai" ? (
+            <AiListingCreator
+              draft={draft}
+              onDraftChange={updateDraft}
+              categoryIdForSlug={categoryIdForSlug}
+              images={images}
+              previews={previews}
+              onImagesChange={handleImagesChange}
+              errors={errors}
+              submitting={submitting}
+              onPublish={(analysis, missingAnswers) => {
+                handleSubmit(undefined, analysis, missingAnswers);
+              }}
+              onExit={() => setCreationMode("manual")}
+              defaultCurrency={defaultCurrency}
+              locale={i18n.language}
+            />
+          ) : (
+          <form onSubmit={(e) => handleSubmit(e)} className="space-y-5">
             {/* Section picker */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">{t("sell.section")} *</Label>
@@ -518,6 +576,7 @@ const Sell = () => {
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Package className="h-4 w-4 mr-2" />{t("sell.publish")}</>}
             </Button>
           </form>
+          )}
         </motion.div>
       </div>
     </div>

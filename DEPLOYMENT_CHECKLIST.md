@@ -60,9 +60,8 @@ current stabilization baseline.
 - [x] PDP sticky bottom CTAs fit
 
 ## 9. Publish
-- [ ] Click Publish → Update in the Lovable editor (frontend changes
-      require explicit republish; backend changes already auto-deploy)
-- [ ] Smoke-test the published `*.lovable.app` URL on a real device
+- [ ] Push to `main` on GitHub (triggers Vercel production deploy)
+- [ ] Smoke-test https://www.shpalljet.net on a real device
 - [ ] If custom domain attached, verify DNS + HTTPS
 
 ## Known non-blockers

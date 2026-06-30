@@ -1,6 +1,8 @@
 import { test, expect, type Page } from "../playwright-fixture";
 
-const SITE = "https://shpalljet.lovable.app";
+import { SITE_URL } from "../src/lib/seoImage";
+
+const SITE = SITE_URL;
 
 async function getMetaContent(page: Page, selector: string) {
   return page.locator(selector).first().getAttribute("content");
