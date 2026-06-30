@@ -1,4 +1,5 @@
 import { supabase } from "./supabase/client";
+import { isOAuthProviderEnabled } from "@/config/authProviders";
 import { getAuthCallbackUrl } from "@/lib/siteUrl";
 
 type SignInOptions = {
@@ -16,6 +17,14 @@ export const oauthAuth = {
     provider: "google" | "apple",
     opts?: SignInOptions,
   ): Promise<OAuthResult> => {
+    if (!isOAuthProviderEnabled(provider)) {
+      return {
+        error: new Error(
+          `${provider === "google" ? "Google" : "Apple"} sign-in is not enabled yet.`,
+        ),
+      };
+    }
+
     const redirectTo = opts?.redirect_uri ?? getAuthCallbackUrl();
 
     const { data, error } = await supabase.auth.signInWithOAuth({

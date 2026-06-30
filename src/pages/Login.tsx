@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { oauthAuth } from "@/integrations/oauthAuth";
+import { enabledOAuthProviders, hasAnyOAuthProvider } from "@/config/authProviders";
 import { setAuthReturnTo } from "@/pages/AuthCallback";
 import { toast } from "sonner";
 
@@ -72,6 +73,8 @@ const Login = () => {
     setLoading(false);
   };
 
+  const oauthProviders = enabledOAuthProviders();
+
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setSocialLoading(provider);
     try {
@@ -123,8 +126,10 @@ const Login = () => {
             <p className="text-sm text-white/60">{t("login.valueProp")}</p>
           </div>
 
-          {/* Social login - PRIMARY */}
+          {/* Social login — only when configured in Supabase + Vercel env */}
+          {hasAnyOAuthProvider() && (
           <div className="space-y-2.5">
+            {oauthProviders.includes("google") && (
             <Button
               variant="outline"
               className="w-full h-12 gap-3 font-medium border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:shadow-lg hover:scale-[1.02] active:scale-[0.97] transition-all duration-200"
@@ -143,7 +148,9 @@ const Login = () => {
               )}
               {t("login.continueGoogle")}
             </Button>
+            )}
 
+            {oauthProviders.includes("apple") && (
             <Button
               variant="outline"
               className="w-full h-12 gap-3 font-medium border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:shadow-lg hover:scale-[1.02] active:scale-[0.97] transition-all duration-200"
@@ -159,11 +166,14 @@ const Login = () => {
               )}
               {t("login.continueApple")}
             </Button>
+            )}
 
             <p className="text-center text-[11px] text-white/40 pt-0.5">{t("login.socialSubtext")}</p>
           </div>
+          )}
 
           {/* Separator */}
+          {hasAnyOAuthProvider() && (
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-white/10" />
@@ -174,6 +184,7 @@ const Login = () => {
               </span>
             </div>
           </div>
+          )}
 
           {/* Email form */}
           <form className="space-y-3.5" onSubmit={handleSubmit}>
