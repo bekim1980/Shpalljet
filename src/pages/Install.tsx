@@ -6,48 +6,68 @@ import Header from "@/components/Header";
 import PreviewCarousel from "@/components/install/PreviewCarousel";
 import InstallInstructions from "@/components/install/InstallInstructions";
 import { detectBrowser, isStandalone } from "@/lib/browserDetect";
+import {
+  getDeferredInstallPrompt,
+  clearDeferredInstallPrompt,
+  subscribeInstallPrompt,
+  type BeforeInstallPromptEvent,
+} from "@/pwa/installPrompt";
 import { toast } from "sonner";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+const PROMPT_WAIT_MS = 3000;
 
 const Install = () => {
   const browser = useMemo(() => detectBrowser(), []);
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState<boolean>(false);
+  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(() => getDeferredInstallPrompt());
+  const [installed, setInstalled] = useState(() => isStandalone());
   const [busy, setBusy] = useState(false);
+  const [promptTimedOut, setPromptTimedOut] = useState(false);
 
   useEffect(() => {
-    setInstalled(isStandalone());
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
+    const sync = () => {
+      setInstalled(isStandalone());
+      setDeferred(getDeferredInstallPrompt());
     };
+    sync();
+
+    const unsub = subscribeInstallPrompt(sync);
+
     const onInstalled = () => {
       setInstalled(true);
-      setDeferred(null);
+      clearDeferredInstallPrompt();
       toast.success("Shpalljet installed", { description: "Open it from your home screen anytime." });
     };
-    window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
+
+    const mq = window.matchMedia("(display-mode: standalone)");
+    const onDisplayMode = () => setInstalled(isStandalone());
+    mq.addEventListener("change", onDisplayMode);
+
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt);
+      unsub();
       window.removeEventListener("appinstalled", onInstalled);
+      mq.removeEventListener("change", onDisplayMode);
     };
   }, []);
 
+  useEffect(() => {
+    if (installed || deferred || !browser.supportsNativePrompt) return;
+    const timer = window.setTimeout(() => setPromptTimedOut(true), PROMPT_WAIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [installed, deferred, browser.supportsNativePrompt]);
+
   const handleInstall = async () => {
-    if (!deferred) return;
+    const promptEvent = deferred ?? getDeferredInstallPrompt();
+    if (!promptEvent) return;
     try {
       setBusy(true);
-      await deferred.prompt();
-      const { outcome } = await deferred.userChoice;
+      await promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
       if (outcome === "accepted") setInstalled(true);
       else toast("Maybe later", { description: "You can install Shpalljet anytime from this page." });
     } finally {
       setBusy(false);
+      clearDeferredInstallPrompt();
       setDeferred(null);
     }
   };
@@ -66,7 +86,9 @@ const Install = () => {
     }
   };
 
-  const showNativeCTA = !installed && (deferred !== null || browser.supportsNativePrompt);
+  const waitingForPrompt =
+    !installed && !deferred && browser.supportsNativePrompt && !promptTimedOut;
+  const showNativeCTA = !installed && (deferred !== null || waitingForPrompt);
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,7 +138,7 @@ const Install = () => {
               <div className="w-14 h-14 mx-auto rounded-full bg-gradient-gold flex items-center justify-center shadow-gold">
                 <Check className="h-7 w-7 text-primary-foreground" />
               </div>
-              <h2 className="font-display text-lg font-semibold">You're all set</h2>
+              <h2 className="font-display text-lg font-semibold">Shpalljet is already installed</h2>
               <p className="text-sm text-muted-foreground">Shpalljet now lives on your home screen.</p>
               <Button variant="gold" size="lg" className="w-full mt-2" onClick={() => (window.location.href = "/")}>
                 Open Shpalljet
@@ -141,7 +163,7 @@ const Install = () => {
                 {busy ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
                 {deferred ? "Install Shpalljet" : "Preparing install…"}
               </Button>
-              {!deferred && (
+              {waitingForPrompt && (
                 <p className="text-[11px] text-center text-muted-foreground">
                   If nothing happens, follow the steps below to install manually.
                 </p>

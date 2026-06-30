@@ -10,6 +10,7 @@ import { formatPrice, type CurrencyCode } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { computeBadges } from "@/lib/productBadges";
 import { track } from "@/lib/analytics";
+import { pickValidImageUrls } from "@/lib/productImage";
 import ThumbImage from "@/components/common/ThumbImage";
 
 interface ProductCardProduct {
@@ -46,7 +47,7 @@ const ProductCard = ({ product, index }: { product: ProductCardProduct; index: n
   const isWished = wishlist?.has(product.id) ?? false;
   const productCurrency = (product.currency as CurrencyCode) || defaultCurrency;
 
-  const images = (product.image_urls?.length ? product.image_urls : product.image ? [product.image] : []).slice(0, 5);
+  const images = pickValidImageUrls(product.image_urls, product.image);
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();

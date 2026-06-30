@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Vertical } from "@/contexts/VerticalContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
+import { pickFirstValidImageUrl } from "@/lib/productImage";
 import ThumbImage from "@/components/common/ThumbImage";
 
 const verticalLabels: Record<string, string> = {
@@ -79,7 +80,7 @@ const TrendingSection = () => {
                       >
                         <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border/50 relative group-hover:scale-[1.02] transition-transform duration-300">
                           <ThumbImage
-                            src={item.image_urls?.[0] ?? null}
+                            src={pickFirstValidImageUrl(item.image_urls)}
                             alt={item.title}
                             className="w-full h-full object-cover"
                             loading="lazy"

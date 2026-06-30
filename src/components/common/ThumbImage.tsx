@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ThumbImageProps {
   src?: string | null;
@@ -26,7 +26,12 @@ const ThumbImage = ({
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
 
-  const showPlaceholder = !src || errored;
+  useEffect(() => {
+    setLoaded(false);
+    setErrored(false);
+  }, [src]);
+
+  const showPlaceholder = !src?.trim() || errored;
 
   return (
     <div className={`${wrapperClassName} bg-secondary/40 overflow-hidden`}>

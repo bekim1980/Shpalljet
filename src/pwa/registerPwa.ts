@@ -26,8 +26,10 @@ export function initPwa() {
         setInterval(() => registration.update(), 60 * 60 * 1000);
       }
     },
-    onRegisterError(error) {
-      console.error("SW registration failed:", error);
+    onRegisterError(_error) {
+      if (import.meta.env.DEV) {
+        toast.error("Service worker registration failed");
+      }
     },
   });
 }
