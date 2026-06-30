@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import ImageUploader from "@/components/ImageUploader";
 import { useAiListingCreator } from "@/hooks/useAiListingCreator";
 import AiListingProgress from "./AiListingProgress";
 import AiListingReview from "./AiListingReview";
 import type { DraftData } from "@/hooks/useDraftListing";
 import type { AiListingAnalysis } from "@/types/aiListing";
-import { applyAiAnalysisToDraft } from "@/lib/aiListingMapper";
+import { applyGeminiListingToDraft } from "@/lib/geminiListingMapper";
 
 export type AiListingPhase = "upload" | "analyzing" | "review";
 
@@ -42,11 +44,12 @@ const AiListingCreator = ({
   defaultCurrency,
   locale,
 }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { analyzing, currentStep, stepIndex, totalSteps, analysis, error, analyzeImages, reset } =
     useAiListingCreator();
 
   const [phase, setPhase] = useState<AiListingPhase>("upload");
+  const [userNotes, setUserNotes] = useState("");
   const [localAnalysis, setLocalAnalysis] = useState<AiListingAnalysis | null>(null);
   const [missingAnswers, setMissingAnswers] = useState<Record<string, string>>({});
   const [disambiguationChoice, setDisambiguationChoice] = useState<Record<string, string>>({});
@@ -54,16 +57,17 @@ const AiListingCreator = ({
   const handleStartAnalysis = useCallback(async () => {
     if (images.length === 0) return;
     setPhase("analyzing");
-    const result = await analyzeImages(images, locale || i18n.language);
+    const result = await analyzeImages(images, userNotes.trim() || undefined);
     if (result) {
-      const catId = categoryIdForSlug(result.category);
-      onDraftChange(applyAiAnalysisToDraft(result, catId));
-      setLocalAnalysis(result);
+      const slug = result.listing.category !== "Unknown" ? result.listing.category : result.analysis.category;
+      const catId = categoryIdForSlug(slug);
+      onDraftChange(applyGeminiListingToDraft(result.listing, catId));
+      setLocalAnalysis(result.analysis);
       setPhase("review");
     } else {
       setPhase("upload");
     }
-  }, [images, analyzeImages, locale, i18n.language, categoryIdForSlug, onDraftChange]);
+  }, [images, analyzeImages, userNotes, categoryIdForSlug, onDraftChange]);
 
   const handleAnalysisPatch = (patch: Partial<AiListingAnalysis>) => {
     if (!localAnalysis) return;
@@ -110,13 +114,26 @@ const AiListingCreator = ({
               maxImages={10}
               onImagesChange={onImagesChange}
             />
+            <div className="space-y-2">
+              <Label htmlFor="ai-creator-notes">{t("aiListing.userNotes")}</Label>
+              <Textarea
+                id="ai-creator-notes"
+                placeholder={t("aiListing.userNotesPlaceholder")}
+                className="bg-secondary/50 min-h-[72px] text-sm"
+                value={userNotes}
+                onChange={(e) => setUserNotes(e.target.value)}
+                maxLength={500}
+              />
+            </div>
             {error && (
               <p className="text-sm text-destructive">
                 {error === "rate_limit"
                   ? t("ai.rateLimit")
-                  : error === "credits"
-                    ? t("ai.creditsOut")
-                    : t("aiListing.analysisFailed")}
+                  : error === "not_configured"
+                    ? t("aiListing.notConfigured")
+                    : error === "credits"
+                      ? t("ai.creditsOut")
+                      : t("aiListing.analysisFailed")}
               </p>
             )}
             <Button

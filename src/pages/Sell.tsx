@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -26,6 +26,7 @@ import { useCategories } from "@/hooks/useCategories";
 import SmartListingHelper, { type ListingSuggestion } from "@/components/ai/SmartListingHelper";
 import AiListingCreator from "@/components/ai/aiListing/AiListingCreator";
 import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/features";
+import { useListingAiGeneration } from "@/hooks/useListingAiGeneration";
 import { enrichDescriptionWithAiMeta } from "@/lib/aiListingMapper";
 import type { AiListingAnalysis } from "@/types/aiListing";
 
@@ -69,6 +70,14 @@ const Sell = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creationMode, setCreationMode] = useState<"manual" | "ai">("manual");
+  const [aiUserNotes, setAiUserNotes] = useState("");
+
+  const categoryIdForSlug = useCallback(
+    (slug: string) => dbCategories?.find((c) => c.slug === slug)?.id ?? "",
+    [dbCategories],
+  );
+  const { generateFromImages, loading: aiGenerating, error: aiGenerateError } =
+    useListingAiGeneration(categoryIdForSlug);
 
   if (authLoading) return null;
   if (!user) {
@@ -85,7 +94,17 @@ const Sell = () => {
 
   const handleImagesChange = (newImages: File[], newPreviews: string[]) => { setImages(newImages); setPreviews(newPreviews); };
 
-  const categoryIdForSlug = (slug: string) => dbCategories?.find((c) => c.slug === slug)?.id ?? "";
+  const handleGenerateWithAi = async () => {
+    if (images.length === 0) {
+      setErrors((prev) => ({ ...prev, images: t("sell.imageRequired", "Please add at least one image") }));
+      return;
+    }
+    const result = await generateFromImages(images, aiUserNotes.trim() || undefined);
+    if (result) {
+      updateDraft(result.draftPatch);
+      toast.success(t("aiListing.generated"));
+    }
+  };
 
   const validate = (_opts?: { fromAi?: boolean }): boolean => {
     const errs: Record<string, string> = {};
@@ -267,6 +286,50 @@ const Sell = () => {
 
             <ImageUploader images={images} previews={previews} onImagesChange={handleImagesChange} />
             <FieldError field="images" />
+
+            {ENABLE_AI_LISTING_CREATOR && (
+              <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ai-notes">{t("aiListing.userNotes")}</Label>
+                  <Textarea
+                    id="ai-notes"
+                    placeholder={t("aiListing.userNotesPlaceholder")}
+                    className="bg-secondary/50 min-h-[72px] text-sm"
+                    value={aiUserNotes}
+                    onChange={(e) => setAiUserNotes(e.target.value)}
+                    maxLength={500}
+                  />
+                </div>
+                {aiGenerateError && (
+                  <p className="text-sm text-destructive">
+                    {aiGenerateError === "rate_limit"
+                      ? t("ai.rateLimit")
+                      : aiGenerateError === "not_configured"
+                        ? t("aiListing.notConfigured")
+                        : t("aiListing.analysisFailed")}
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-primary/40"
+                  disabled={aiGenerating || images.length === 0}
+                  onClick={handleGenerateWithAi}
+                >
+                  {aiGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {t("aiListing.generating")}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {t("aiListing.generateWithAi")}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {/* Title */}
             <div className="space-y-2">

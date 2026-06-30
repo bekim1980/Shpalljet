@@ -58,7 +58,15 @@ Set `VITE_OAUTH_APPLE_ENABLED=true` only after all fields are saved.
 | `AI_PROVIDER_API_KEY` | `ai-assistant` — API key for the AI gateway |
 | `AI_PROVIDER_GATEWAY_URL` | `ai-assistant` — full chat completions URL (OpenAI-compatible) |
 
-The AI gateway is provider-neutral. Configure both secrets for `ai-assistant` to enable chat, search parsing, listing suggestions, and photo analysis.
+The AI gateway is provider-neutral. Configure both secrets for `ai-assistant` to enable chat, search parsing, and listing suggestions.
+
+## Vercel server env (never expose to frontend)
+
+| Variable | Used by |
+|---|---|
+| `GEMINI_API_KEY` | `api/ai/generate-listing` — Google Gemini API key for AI listing generation (`gemini-3-flash-preview`) |
+
+Set `GEMINI_API_KEY` in the **Vercel** project → Settings → Environment Variables (Production, Preview, Development). Do **not** prefix with `VITE_`. For local dev, add the same key to `.env` at the project root; Vite serves `/api/ai/generate-listing` via a dev middleware.
 
 ## Local dev
 

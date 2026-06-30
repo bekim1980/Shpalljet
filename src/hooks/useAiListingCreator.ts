@@ -1,11 +1,16 @@
 import { useState, useCallback, useRef } from "react";
-import { buildCategoryCatalog } from "@/lib/aiCategoryCatalog";
 import { filesToBase64Images } from "@/lib/compressImageForAi";
+import { geminiListingToAnalysis } from "@/lib/geminiListingMapper";
+import { parseGeminiListingJson, type GeminiListingResult } from "@/lib/geminiListingSchema";
 import type { AiAnalysisStep, AiListingAnalysis } from "@/types/aiListing";
+
+export type AiListingAnalyzeResult = {
+  analysis: AiListingAnalysis;
+  listing: GeminiListingResult;
+};
 import { AI_ANALYSIS_STEPS } from "@/types/aiListing";
 
-const URL_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
-
+const ENDPOINT = "/api/ai/generate-listing";
 const STEP_MS = 520;
 const MIN_ANALYSIS_MS = 2800;
 
@@ -28,7 +33,7 @@ export function useAiListingCreator() {
     setError(null);
   }, []);
 
-  const analyzeImages = useCallback(async (files: File[], locale = "en") => {
+  const analyzeImages = useCallback(async (files: File[], userText?: string): Promise<AiListingAnalyzeResult | null> => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -45,30 +50,24 @@ export function useAiListingCreator() {
     const started = Date.now();
 
     try {
-      const fetchPromise = (async (): Promise<AiListingAnalysis> => {
-        const base64Images = await filesToBase64Images(files);
-        const resp = await fetch(URL_BASE, {
+      const fetchPromise = (async (): Promise<AiListingAnalyzeResult> => {
+        const images = await filesToBase64Images(files);
+        const mimeTypes = files.map((f) => f.type || "image/jpeg");
+
+        const resp = await fetch(ENDPOINT, {
           method: "POST",
           signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            mode: "analyze_listing_images",
-            images: base64Images,
-            category_catalog: buildCategoryCatalog(),
-            locale,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images, mimeTypes, userText }),
         });
 
         if (resp.status === 429) throw new Error("rate_limit");
-        if (resp.status === 402) throw new Error("credits");
+        if (resp.status === 503) throw new Error("not_configured");
         if (!resp.ok) throw new Error("api_error");
 
         const data = await resp.json();
-        if (!data.analysis) throw new Error("no_analysis");
-        return data.analysis as AiListingAnalysis;
+        const listing = parseGeminiListingJson(data.listing ?? data);
+        return { analysis: geminiListingToAnalysis(listing), listing };
       })();
 
       const [result] = await Promise.all([
@@ -82,12 +81,18 @@ export function useAiListingCreator() {
       }
 
       setStepIndex(AI_ANALYSIS_STEPS.length - 1);
-      setAnalysis(result);
+      setAnalysis(result.analysis);
       return result;
     } catch (e) {
       if ((e as Error).name === "AbortError") return null;
       const msg = (e as Error).message;
-      setError(msg === "rate_limit" ? "rate_limit" : msg === "credits" ? "credits" : "failed");
+      setError(
+        msg === "rate_limit"
+          ? "rate_limit"
+          : msg === "not_configured"
+            ? "not_configured"
+            : "failed",
+      );
       return null;
     } finally {
       clearInterval(stepTimer);
