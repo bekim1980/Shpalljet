@@ -1,0 +1,7 @@
+project_id = "aybngrlutsfvapxtgqkg"
+
+[functions.ai-assistant]
+verify_jwt = false
+
+[functions.expire-listings]
+verify_jwt = false

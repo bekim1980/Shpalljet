@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN vertical text NOT NULL DEFAULT 'luxe';

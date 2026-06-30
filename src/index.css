@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-vertical="luxe"] {
+    --background: 0 0% 4%;
+    --foreground: 40 20% 92%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 40 20% 92%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 40 20% 92%;
+
+    --primary: 42 65% 55%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 40 20% 85%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 40 5% 55%;
+
+    --accent: 42 45% 25%;
+    --accent-foreground: 42 65% 75%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 42 65% 55%;
+
+    --radius: 0.5rem;
+
+    --gold: 42 65% 55%;
+    --gold-light: 42 60% 70%;
+    --gold-dark: 42 50% 35%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 40 20% 85%;
+    --sidebar-primary: 42 65% 55%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 40 20% 85%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 42 65% 55%;
+  }
+
+  [data-vertical="market"] {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 94%;
+    --secondary-foreground: 220 10% 30%;
+
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 5% 45%;
+
+    --accent: 220 30% 90%;
+    --accent-foreground: 220 70% 40%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 220 70% 50%;
+
+    --gold: 220 70% 50%;
+    --gold-light: 220 60% 65%;
+    --gold-dark: 220 60% 35%;
+  }
+
+  [data-vertical="rent"] {
+    --background: 160 15% 97%;
+    --foreground: 160 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 10% 10%;
+
+    --primary: 160 60% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 10% 93%;
+    --secondary-foreground: 160 10% 30%;
+
+    --muted: 160 8% 90%;
+    --muted-foreground: 160 5% 45%;
+
+    --accent: 160 25% 88%;
+    --accent-foreground: 160 50% 30%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 160 8% 86%;
+    --input: 160 8% 86%;
+    --ring: 160 60% 40%;
+
+    --gold: 160 60% 40%;
+    --gold-light: 160 50% 55%;
+    --gold-dark: 160 50% 28%;
+  }
+
+  /* Xhiro — warm off-white + red/orange (Rides) */
+  [data-vertical="xhiro"] {
+    --background: 50 26% 96%;       /* #F6F5F0 */
+    --foreground: 0 0% 10%;         /* #1A1A1A */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 11 81% 54%;          /* #E8432A */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 50 18% 91%;
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 48 12% 88%;
+    --muted-foreground: 45 4% 45%;  /* #8A8880 */
+
+    --accent: 11 80% 95%;
+    --accent-foreground: 11 81% 40%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 48 10% 86%;
+    --input: 48 10% 86%;
+    --ring: 11 81% 54%;
+
+    --gold: 11 81% 54%;
+    --gold-light: 16 90% 62%;
+    --gold-dark: 11 70% 42%;
+  }
+
+  [data-vertical="services"] {
+    --background: 260 15% 97%;
+    --foreground: 260 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 260 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 10% 10%;
+
+    --primary: 260 60% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 10% 93%;
+    --secondary-foreground: 260 10% 30%;
+
+    --muted: 260 8% 90%;
+    --muted-foreground: 260 5% 45%;
+
+    --accent: 260 25% 88%;
+    --accent-foreground: 260 50% 35%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 260 8% 86%;
+    --input: 260 8% 86%;
+    --ring: 260 60% 55%;
+
+    --gold: 260 60% 55%;
+    --gold-light: 260 50% 70%;
+    --gold-dark: 260 50% 35%;
+  }
+
+  [data-vertical="jobs"] {
+    --background: 350 25% 97%;
+    --foreground: 350 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 350 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 350 10% 10%;
+
+    --primary: 350 75% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 350 15% 94%;
+    --secondary-foreground: 350 10% 30%;
+
+    --muted: 350 10% 91%;
+    --muted-foreground: 350 5% 45%;
+
+    --accent: 350 30% 90%;
+    --accent-foreground: 350 65% 40%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 350 10% 88%;
+    --input: 350 10% 88%;
+    --ring: 350 75% 50%;
+
+    --gold: 350 75% 50%;
+    --gold-light: 350 70% 65%;
+    --gold-dark: 350 60% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-light)));
+  }
+
+  .bg-gradient-gold {
+    background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-dark)));
+  }
+
+  .shadow-gold {
+    box-shadow: 0 4px 30px -5px hsl(var(--gold) / 0.18);
+  }
+
+  .border-gold {
+    border-color: hsl(var(--gold) / 0.25);
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}

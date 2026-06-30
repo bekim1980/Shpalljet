@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /messages
+Disallow: /login
+Disallow: /register
+Disallow: /dashboard
+Disallow: /sell
+Disallow: /orders
+Disallow: /analytics
+Disallow: /insights
+Disallow: /my-rides
+
+Sitemap: https://shpalljet.net/sitemap.xml
