@@ -8,8 +8,8 @@ import InstallInstructions from "@/components/install/InstallInstructions";
 import { detectBrowser, isStandalone } from "@/lib/browserDetect";
 import {
   getDeferredInstallPrompt,
-  clearDeferredInstallPrompt,
   subscribeInstallPrompt,
+  runInstallPrompt,
   type BeforeInstallPromptEvent,
 } from "@/pwa/installPrompt";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ const Install = () => {
 
     const onInstalled = () => {
       setInstalled(true);
-      clearDeferredInstallPrompt();
+      setDeferred(null);
       toast.success("Shpalljet installed", { description: "Open it from your home screen anytime." });
     };
     window.addEventListener("appinstalled", onInstalled);
@@ -61,14 +61,14 @@ const Install = () => {
     if (!promptEvent) return;
     try {
       setBusy(true);
-      await promptEvent.prompt();
-      const { outcome } = await promptEvent.userChoice;
+      const outcome = await runInstallPrompt();
       if (outcome === "accepted") setInstalled(true);
-      else toast("Maybe later", { description: "You can install Shpalljet anytime from this page." });
+      else if (outcome === "dismissed") {
+        toast("Maybe later", { description: "You can install Shpalljet anytime from this page." });
+      }
     } finally {
       setBusy(false);
-      clearDeferredInstallPrompt();
-      setDeferred(null);
+      setDeferred(getDeferredInstallPrompt());
     }
   };
 

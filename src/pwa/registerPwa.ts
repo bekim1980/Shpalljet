@@ -7,9 +7,9 @@ export function initPwa() {
   const updateSW = registerSW({
     immediate: true,
     onOfflineReady() {
-      toast.message("Ready for limited offline use", {
-        description: "The app shell is cached. Listings still need internet.",
-      });
+      if (import.meta.env.DEV) {
+        console.debug("[pwa] offline shell cached (not shown to users)");
+      }
     },
     onNeedRefresh() {
       toast("Update available", {

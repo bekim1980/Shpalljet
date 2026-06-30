@@ -4,6 +4,7 @@ import {
   getDeferredInstallPrompt,
   clearDeferredInstallPrompt,
   subscribeInstallPrompt,
+  runInstallPrompt,
 } from "@/pwa/installPrompt";
 
 describe("installPrompt", () => {
@@ -48,5 +49,22 @@ describe("installPrompt", () => {
 
     expect(listener).toHaveBeenCalled();
     unsub();
+  });
+
+  it("runInstallPrompt calls prompt and clears deferred", async () => {
+    const event = new Event("beforeinstallprompt") as Event & {
+      preventDefault: () => void;
+      prompt: () => Promise<void>;
+      userChoice: Promise<{ outcome: "accepted" }>;
+    };
+    event.preventDefault = vi.fn();
+    event.prompt = vi.fn().mockResolvedValue(undefined);
+    event.userChoice = Promise.resolve({ outcome: "accepted" });
+    window.dispatchEvent(event);
+
+    const outcome = await runInstallPrompt();
+    expect(outcome).toBe("accepted");
+    expect(event.prompt).toHaveBeenCalled();
+    expect(getDeferredInstallPrompt()).toBeNull();
   });
 });

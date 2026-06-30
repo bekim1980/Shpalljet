@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { VerticalProvider } from "@/contexts/VerticalContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import VerticalThemeWrapper from "@/components/VerticalThemeWrapper";
+import InstallBanner from "@/components/install/InstallBanner";
 import Homepage from "./pages/Homepage.tsx";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
@@ -56,6 +57,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <VerticalThemeWrapper>
+                <InstallBanner />
                 <Routes>
                   <Route path="/" element={<Homepage />} />
                   <Route path="/index" element={<Homepage />} />
