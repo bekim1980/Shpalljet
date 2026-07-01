@@ -72,6 +72,44 @@ describe("GEMINI_LISTING_SYSTEM_INSTRUCTION", () => {
     expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"price_estimate"');
     expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"features": []');
   });
+
+  it("requires zero hallucinations and visible-only facts", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/ZERO HALLUCINATIONS/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/NEVER invent/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/authenticity/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/nuk mund të konfirmohet/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/duket se/i);
+  });
+
+  it("restricts antique and original claims", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/antike, origjinale, autentike/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/me stil/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/dekorative/i);
+  });
+
+  it("limits features to short factual bullets", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Maximum 8 items/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Maximum 8 words per item/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/No marketing text/i);
+  });
+
+  it("requires natural description and cautious titles", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Ofrohet për shitje");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Medalje Dekorative me Stil Osman/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Do not exaggerate/i);
+  });
+
+  it("restricts material and historical claims", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/me ngjyrë ari/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/sultans, kings, emperors/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Kostantiniyye 1293");
+  });
+
+  it("guides keywords, tags, and category selection", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/metadata only/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/most specific category/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/truthful listing/i);
+  });
 });
 
 describe("isGeminiUnavailableError", () => {
@@ -126,6 +164,7 @@ describe("generateListingFromGemini", () => {
     const userTexts = parts.filter((p) => p.text).map((p) => p.text!);
     expect(userTexts.some((t) => /shqip/i.test(t))).toBe(true);
     expect(userTexts.some((t) => /gjithë listimi duhet të jetë në shqip/i.test(t))).toBe(true);
+    expect(userTexts.some((t) => /Mos shpik fakte/i.test(t))).toBe(true);
     expect(userTexts.some((t) => t.includes("Please write this listing in English"))).toBe(true);
   });
 
