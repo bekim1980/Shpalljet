@@ -47,22 +47,102 @@ function stripDataUrl(data: string): string {
 function sanitizeForLog(text: string): string {
   return text
     .replace(/AIza[A-Za-z0-9_-]{20,}/g, "[REDACTED_API_KEY]")
-    .replace(/GEMINI_API_KEY[=:\s]+\S+/gi, "GEMINI_API_KEY=[REDACTED]");
+    .replace(/GEMINI_API_KEY[=:\s]+\S+/gi, "GEMINI_API_KEY=[REDACTED]")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]");
 }
 
-function logGeminiError(err: unknown): void {
+const SENSITIVE_LOG_KEYS = new Set([
+  "apikey",
+  "api_key",
+  "apikeystring",
+  "authorization",
+  "x-goog-api-key",
+]);
+
+function sanitizeForLogValue(value: unknown, depth = 0): unknown {
+  if (depth > 5) return "[Max depth]";
+  if (value == null || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "string") return sanitizeForLog(value);
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: sanitizeForLog(value.message),
+      stack: value.stack ? sanitizeForLog(value.stack) : undefined,
+      status: (value as { status?: number }).status,
+      code: (value as { code?: string | number }).code,
+    };
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeForLogValue(item, depth + 1));
+  }
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      if (SENSITIVE_LOG_KEYS.has(key.toLowerCase())) {
+        out[key] = "[REDACTED]";
+        continue;
+      }
+      out[key] = sanitizeForLogValue(val, depth + 1);
+    }
+    return out;
+  }
+  return sanitizeForLog(String(value));
+}
+
+function tryParseJsonMessage(message: string): unknown | undefined {
+  try {
+    return JSON.parse(message) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function logOriginalGeminiSdkError(err: unknown): void {
   const status =
     (err as { status?: number })?.status ??
     (err as { error?: { code?: number } })?.error?.code;
 
+  const nestedError = (err as { error?: Record<string, unknown> })?.error;
+
+  const code =
+    (err as { code?: string | number })?.code ??
+    nestedError?.code ??
+    (typeof nestedError?.status === "string" ? nestedError.status : undefined);
+
   const message =
     err instanceof Error
-      ? sanitizeForLog(`${err.name}: ${err.message}`)
-      : sanitizeForLog(String(err));
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : undefined;
+
+  const stack = err instanceof Error ? err.stack : undefined;
+
+  const parsedMessage = message ? tryParseJsonMessage(message) : undefined;
+  const responseBody =
+    parsedMessage && typeof parsedMessage === "object" && parsedMessage !== null
+      ? (parsedMessage as { error?: unknown }).error ?? parsedMessage
+      : nestedError;
+
+  const details = (err as { details?: unknown })?.details;
+  const cause = (err as { cause?: unknown })?.cause;
+  const response = (err as { response?: unknown })?.response;
 
   console.error(
-    "Gemini API error:",
-    [message, status ? `status=${status}` : null].filter(Boolean).join(" | "),
+    "Gemini SDK error (original):",
+    sanitizeForLogValue({
+      message: message ? sanitizeForLog(message) : undefined,
+      status,
+      code,
+      stack: stack ? sanitizeForLog(stack) : undefined,
+      name: err instanceof Error ? err.name : undefined,
+      responseBody,
+      details,
+      cause,
+      response,
+    }),
   );
 }
 
@@ -78,7 +158,6 @@ function mapGeminiError(err: unknown): never {
   if (/429|rate.?limit/i.test(message)) throw new Error("rate_limit");
   if (/403|401|api.?key|permission/i.test(message)) throw new Error("gemini_auth");
 
-  logGeminiError(err);
   throw new Error("gemini_error");
 }
 
@@ -142,6 +221,7 @@ export async function generateListingFromGemini(
       if (err.message === "empty_response") throw err;
       if (err.message === "rate_limit" || err.message === "gemini_auth") throw err;
     }
+    logOriginalGeminiSdkError(err);
     mapGeminiError(err);
   }
 }
