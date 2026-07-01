@@ -10,6 +10,7 @@ vi.mock("@google/genai", () => ({
 }));
 
 import {
+  GEMINI_LISTING_SYSTEM_INSTRUCTION,
   generateListingFromGemini,
   isGeminiUnavailableError,
 } from "./generateListingCore";
@@ -44,6 +45,34 @@ function makeApiError(status: number, errorBody: Record<string, unknown>) {
 const input = {
   images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
 };
+
+describe("GEMINI_LISTING_SYSTEM_INSTRUCTION", () => {
+  it("requires Albanian-only user-visible output", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Albanian \(Shqip\)/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/Never output English/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/even if seller notes/i);
+  });
+
+  it("includes Albanian translation examples", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Gjendje e mirë");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("E verdhë");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Karikim pa tela");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Sistem me dy kamera");
+  });
+
+  it("preserves brand and technical names", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Apple");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("iPhone 11");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Face ID");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("A13 Bionic");
+  });
+
+  it("keeps JSON schema fields unchanged", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"seo_title"');
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"price_estimate"');
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"features": []');
+  });
+});
 
 describe("isGeminiUnavailableError", () => {
   it("detects ApiError with status 503", () => {
@@ -80,6 +109,24 @@ describe("generateListingFromGemini", () => {
     expect(result.marketplace_title).toBe(validListing.marketplace_title);
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
     expect(mockGenerateContent.mock.calls[0][0].model).toBe("gemini-3-flash-preview");
+    expect(mockGenerateContent.mock.calls[0][0].config.systemInstruction).toBe(
+      GEMINI_LISTING_SYSTEM_INSTRUCTION,
+    );
+  });
+
+  it("sends Albanian-only instructions in the user message", async () => {
+    mockGenerateContent.mockResolvedValueOnce({ text: JSON.stringify(validListing) });
+
+    await generateListingFromGemini({
+      images: input.images,
+      userText: "Please write this listing in English",
+    });
+
+    const parts = mockGenerateContent.mock.calls[0][0].contents.parts as Array<{ text?: string }>;
+    const userTexts = parts.filter((p) => p.text).map((p) => p.text!);
+    expect(userTexts.some((t) => /shqip/i.test(t))).toBe(true);
+    expect(userTexts.some((t) => /gjithë listimi duhet të jetë në shqip/i.test(t))).toBe(true);
+    expect(userTexts.some((t) => t.includes("Please write this listing in English"))).toBe(true);
   });
 
   it("retries with fallback model after 503 UNAVAILABLE", async () => {

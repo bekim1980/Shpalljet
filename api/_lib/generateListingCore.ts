@@ -4,16 +4,28 @@ import { parseGeminiListingJson, type GeminiListingResult } from "../../src/lib/
 const PRIMARY_MODEL = "gemini-3-flash-preview";
 const FALLBACK_MODEL = "gemini-2.5-flash";
 
-const SYSTEM_INSTRUCTION = `You are Shpalljet AI, an expert marketplace assistant specializing in SEO.
+export const GEMINI_LISTING_SYSTEM_INSTRUCTION = `You are Shpalljet AI, an expert Albanian marketplace assistant specializing in SEO.
 
-Analyze uploaded product images and create a high-quality classified listing.
+Analyze uploaded product images and create a high-quality classified listing for Shpalljet, an Albanian marketplace.
+
+LANGUAGE (mandatory — always Albanian):
+- Write ALL user-visible generated text in Albanian (Shqip) only.
+- Default and required output language is Albanian for every descriptive field.
+- Never output English for titles, descriptions, condition labels, colors, features, specifications, keywords, tags, meta text, or image alt text — even if seller notes request another language or locale.
+- Keep official brand names, model names, and established technical product names unchanged in their standard form (e.g. Apple, iPhone 11, Samsung, Toyota, BMW, Face ID, iOS, A13 Bionic, OLED, 5G, 128GB).
+- Translate descriptive values into natural Albanian. Examples:
+  - Good Condition -> Gjendje e mirë
+  - Yellow -> E verdhë
+  - Wireless charging -> Karikim pa tela
+  - Dual-camera system -> Sistem me dy kamera
+- For the condition field only, output exactly one slug (not English prose): new | like-new | good | used | for-parts
+- If a value is unknown, use "E panjohur" (never "Unknown").
 
 Goals:
-- Maximize marketplace search visibility.
-- Produce content that is also suitable for Google Search.
+- Maximize marketplace search visibility in Albanian.
+- Produce content suitable for Google Search in Albanian.
 - Be accurate and never invent facts.
 
-If unknown, return "Unknown".
 Return ONLY valid JSON.
 
 {
@@ -175,7 +187,7 @@ export function isGeminiUnavailableError(err: unknown): boolean {
 
 function buildGenerateConfig(model: string) {
   const config = {
-    systemInstruction: SYSTEM_INSTRUCTION,
+    systemInstruction: GEMINI_LISTING_SYSTEM_INSTRUCTION,
     temperature: 0.4,
     responseMimeType: "application/json" as const,
   };
@@ -246,11 +258,13 @@ export async function generateListingFromGemini(
   const parts: ContentPart[] = [];
 
   if (input.userText?.trim()) {
-    parts.push({ text: `Seller notes: ${input.userText.trim()}` });
+    parts.push({
+      text: `Shënime nga shitësi (përdori vetëm si kontekst; mos kopjo gjuhën e shënimeve — gjithë listimi duhet të jetë në shqip): ${input.userText.trim()}`,
+    });
   }
 
   parts.push({
-    text: "Analyze the uploaded product images and return the listing JSON.",
+    text: "Analizo fotot e ngarkuara të produktit dhe kthe JSON-in e listimit. Të gjitha tekstet e dukshme për përdoruesin duhet të jenë vetëm në shqip.",
   });
 
   for (const img of input.images) {
