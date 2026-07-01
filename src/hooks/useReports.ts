@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
 import { toast } from "sonner";
 
 export const useCreateReport = () => {
@@ -19,6 +20,7 @@ export const useCreateReport = () => {
       description: string;
     }) => {
       if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase.from("reports").insert({
         reporter_id: user.id,
         reported_type: reportedType,
@@ -31,8 +33,8 @@ export const useCreateReport = () => {
     onSuccess: () => {
       toast.success("Raporti u dërgua me sukses. Faleminderit!");
     },
-    onError: () => {
-      toast.error("Dështoi dërgimi i raportit");
+    onError: (err) => {
+      toast.error(getMutationErrorMessage(err, "Dështoi dërgimi i raportit"));
     },
   });
 };

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 
@@ -28,6 +29,7 @@ export const useToggleWishlist = () => {
   return useMutation({
     mutationFn: async ({ productId, isWished }: { productId: string; isWished: boolean }) => {
       if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
 
       if (isWished) {
         const { error } = await supabase
@@ -54,11 +56,11 @@ export const useToggleWishlist = () => {
       });
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["wishlist", user?.id], context.previous);
       }
-      toast.error("Failed to update wishlist");
+      toast.error(getMutationErrorMessage(err, "Failed to update wishlist"));
     },
     onSettled: (_data, _err, { productId }) => {
       // Refresh wishlist set + any view that depends on favorites_count / ranking

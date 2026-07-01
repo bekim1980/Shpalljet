@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
 import { toast } from "sonner";
 
 export interface Review {
@@ -76,6 +77,7 @@ export const useCreateReview = () => {
       comment: string;
     }) => {
       if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase.from("reviews").insert({
         reviewer_id: user.id,
         seller_id: sellerId,
@@ -90,8 +92,8 @@ export const useCreateReview = () => {
       queryClient.invalidateQueries({ queryKey: ["seller-rating", variables.sellerId] });
       toast.success("Vlerësimi u dërgua me sukses!");
     },
-    onError: () => {
-      toast.error("Dështoi dërgimi i vlerësimit");
+    onError: (err) => {
+      toast.error(getMutationErrorMessage(err, "Dështoi dërgimi i vlerësimit"));
     },
   });
 };

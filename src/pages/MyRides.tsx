@@ -8,6 +8,7 @@ import XhiroBottomNav from "@/components/xhiro/XhiroBottomNav";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
 import { supabase } from "@/integrations/supabase/client";
 import type { Ride } from "@/hooks/useRides";
 
@@ -48,14 +49,20 @@ export default function MyRides() {
   }, [user, navigate]);
 
   const handleDelete = async (id: string) => {
+    if (!user) return;
     if (!confirm(t("xhiro.confirmDelete", "Delete this ride?") as string)) return;
-    const { error } = await (supabase as any).from("rides").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      await assertAccountCanMutate(user.id);
+      const { error } = await (supabase as any).from("rides").delete().eq("id", id);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setRides((prev) => prev.filter((r) => r.id !== id));
+      toast.success(t("xhiro.deleted", "Ride deleted"));
+    } catch (err) {
+      toast.error(getMutationErrorMessage(err, t("common.error", "Something went wrong")));
     }
-    setRides((prev) => prev.filter((r) => r.id !== id));
-    toast.success(t("xhiro.deleted", "Ride deleted"));
   };
 
   const now = Date.now();

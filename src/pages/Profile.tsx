@@ -16,6 +16,9 @@ import Header from "@/components/Header";
 import MyListings from "@/components/MyListings";
 import WishlistTab from "@/components/WishlistTab";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountRestriction } from "@/hooks/useAccountRestriction";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
+import AccountRestrictedBanner from "@/components/AccountRestrictedBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -57,6 +60,8 @@ const Profile = () => {
   const [uploading, setUploading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
 
+  const { restriction, isRestricted } = useAccountRestriction();
+
   useEffect(() => {
     if (!user) return;
     const fetchProfile = async () => {
@@ -79,19 +84,31 @@ const Profile = () => {
   if (!user) return (<div className="min-h-screen bg-background"><Header /><div className="container py-20 text-center space-y-4"><p className="text-muted-foreground font-display text-lg">{t("profile.loginRequired")}</p><Button variant="gold" onClick={() => navigate("/login")}>{t("common.login")}</Button></div></div>);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return; setUploading(true);
-    try { const ext = file.name.split(".").pop(); const path = `${user.id}/avatar.${ext}`; const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true }); if (uploadError) throw uploadError; const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path); const url = `${urlData.publicUrl}?t=${Date.now()}`; setAvatarUrl(url); await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user.id); toast.success(t("profile.avatarUpdated")); } catch (err: any) { toast.error(err.message || t("profile.avatarFailed")); } finally { setUploading(false); }
+    const file = e.target.files?.[0]; if (!file) return;
+    if (isRestricted) { toast.error(restriction!.message); return; }
+    setUploading(true);
+    try {
+      await assertAccountCanMutate(user.id);
+      const ext = file.name.split(".").pop(); const path = `${user.id}/avatar.${ext}`; const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true }); if (uploadError) throw uploadError; const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path); const url = `${urlData.publicUrl}?t=${Date.now()}`; setAvatarUrl(url); await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user.id); toast.success(t("profile.avatarUpdated"));
+    } catch (err: unknown) { toast.error(getMutationErrorMessage(err, t("profile.avatarFailed"))); } finally { setUploading(false); }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isRestricted) { toast.error(restriction!.message); return; }
     const cleanPhone = phoneNumber.trim();
     if (cleanPhone && !isValidPhone(cleanPhone)) { setPhoneError(t("profile.phoneError")); return; }
     setPhoneError("");
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({ display_name: displayName.trim(), bio: bio.trim(), phone_number: cleanPhone || null, whatsapp_enabled: cleanPhone ? whatsappEnabled : false, viber_enabled: cleanPhone ? viberEnabled : false, region: userRegion || null }).eq("user_id", user.id);
-    if (error) { toast.error(error.message); } else { toast.success(t("profile.profileUpdated")); if (userRegion) { setRegion(userRegion as any); } }
-    setSaving(false);
+    try {
+      await assertAccountCanMutate(user.id);
+      const { error } = await supabase.from("profiles").update({ display_name: displayName.trim(), bio: bio.trim(), phone_number: cleanPhone || null, whatsapp_enabled: cleanPhone ? whatsappEnabled : false, viber_enabled: cleanPhone ? viberEnabled : false, region: userRegion || null }).eq("user_id", user.id);
+      if (error) { toast.error(error.message); } else { toast.success(t("profile.profileUpdated")); if (userRegion) { setRegion(userRegion as any); } }
+    } catch (err: unknown) {
+      toast.error(getMutationErrorMessage(err, t("profile.saveFailed", "Dështoi ruajtja e profilit")));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return (<div className="min-h-screen bg-background"><Header /><div className="container py-20 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></div>);
@@ -110,6 +127,7 @@ const Profile = () => {
             </TabsList>
             <TabsContent value="profile">
               <form onSubmit={handleSave} className="space-y-6">
+                <AccountRestrictedBanner restriction={restriction} />
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-border">{avatarUrl ? (<img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />) : (<User className="h-10 w-10 text-muted-foreground" />)}</div>
@@ -138,7 +156,7 @@ const Profile = () => {
                   </div>
                 )}
                 <div className="space-y-2"><Label htmlFor="bio">{t("profile.bio")}</Label><Textarea id="bio" placeholder={t("profile.bioPlaceholder")} className="bg-secondary/50 min-h-[100px]" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} /></div>
-                <Button variant="gold" className="w-full" type="submit" disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />{t("profile.saveChanges")}</>}</Button>
+                <Button variant="gold" className="w-full" type="submit" disabled={saving || isRestricted}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />{t("profile.saveChanges")}</>}</Button>
               </form>
             </TabsContent>
             <TabsContent value="listings"><MyListings /></TabsContent>

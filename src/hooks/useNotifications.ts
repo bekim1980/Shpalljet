@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate } from "@/lib/accountRestriction";
 
 export interface Notification {
   id: string;
@@ -69,6 +70,8 @@ export const useMarkNotificationRead = () => {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })
@@ -88,6 +91,7 @@ export const useMarkAllRead = () => {
   return useMutation({
     mutationFn: async () => {
       if (!user) return;
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })

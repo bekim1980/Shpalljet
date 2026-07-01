@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate } from "@/lib/accountRestriction";
 import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 
 export interface Conversation {
@@ -142,11 +143,13 @@ export function useMessages(conversationId: string | null) {
   const sendMessage = async (content: string) => {
     if (!conversationId || !user) return;
 
-    await supabase.from("messages").insert({
+    await assertAccountCanMutate(user.id);
+    const { error } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_id: user.id,
       content,
     });
+    if (error) throw error;
   };
 
   return { messages, loading, sendMessage };
@@ -165,6 +168,8 @@ export function useStartConversation() {
     sellerId: string
   ): Promise<StartConversationResult | null> => {
     if (!user) return null;
+
+    await assertAccountCanMutate(user.id);
 
     // 1. Reuse existing conversation if present
     const { data: existing } = await supabase

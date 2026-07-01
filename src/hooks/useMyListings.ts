@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
 import { toast } from "sonner";
 
 export const useMyListings = () => {
@@ -30,9 +31,12 @@ export const useMyListings = () => {
 
 export const useDeleteListing = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (productId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase
         .from("products")
         .delete()
@@ -44,14 +48,15 @@ export const useDeleteListing = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Artikulli u fshi me sukses");
     },
-    onError: () => {
-      toast.error("Dështoi fshirja e artikullit");
+    onError: (err) => {
+      toast.error(getMutationErrorMessage(err, "Dështoi fshirja e artikullit"));
     },
   });
 };
 
 export const useUpdateListing = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -61,6 +66,8 @@ export const useUpdateListing = () => {
       id: string;
       updates: { title?: string; description?: string; price?: number; category?: string; condition?: string; status?: string };
     }) => {
+      if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await supabase
         .from("products")
         .update(updates)
@@ -72,8 +79,8 @@ export const useUpdateListing = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Artikulli u përditësua me sukses");
     },
-    onError: () => {
-      toast.error("Dështoi përditësimi i artikullit");
+    onError: (err) => {
+      toast.error(getMutationErrorMessage(err, "Dështoi përditësimi i artikullit"));
     },
   });
 };

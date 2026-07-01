@@ -7,8 +7,12 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations, useMessages, type Conversation } from "@/hooks/useChat";
+import { useAccountRestriction } from "@/hooks/useAccountRestriction";
+import { getMutationErrorMessage } from "@/lib/accountRestriction";
+import AccountRestrictedBanner from "@/components/AccountRestrictedBanner";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { sq, enUS } from "date-fns/locale";
 
@@ -164,6 +168,7 @@ function MessageThread({
   // ── ALL hooks unconditionally at the top ──────────────────────────────────
   const { t } = useTranslation();
   const { messages, loading, sendMessage } = useMessages(conversationId);
+  const { restriction, isRestricted } = useAccountRestriction();
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [productTitle, setProductTitle] = useState<string | null>(null);
@@ -209,6 +214,8 @@ function MessageThread({
       const next = new URLSearchParams(searchParams);
       next.delete("prefill");
       setSearchParams(next, { replace: true });
+    }).catch((err) => {
+      toast.error(getMutationErrorMessage(err, t("messages.sendFailed", "Dështoi dërgimi i mesazhit")));
     });
   }, [convsLoading, prefill, conv, conversationId, sendMessage, onMessageSent, searchParams, setSearchParams, messages.length]);
 
@@ -219,7 +226,10 @@ function MessageThread({
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSend = async () => {
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || isRestricted) {
+      if (isRestricted && restriction) toast.error(restriction.message);
+      return;
+    }
     setSending(true);
     const msg = input;
     setInput("");
@@ -239,6 +249,9 @@ function MessageThread({
           },
         });
       }
+    } catch (err) {
+      toast.error(getMutationErrorMessage(err, t("messages.sendFailed", "Dështoi dërgimi i mesazhit")));
+      setInput(msg);
     } finally {
       setSending(false);
     }
@@ -298,15 +311,17 @@ function MessageThread({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-border/50">
+      <div className="p-4 border-t border-border/50 space-y-2">
+        <AccountRestrictedBanner restriction={restriction} />
         <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={t("messages.placeholder")}
             className="bg-secondary/50"
+            disabled={isRestricted}
           />
-          <Button type="submit" variant="gold" size="icon" disabled={!input.trim() || sending}>
+          <Button type="submit" variant="gold" size="icon" disabled={!input.trim() || sending || isRestricted}>
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate } from "@/lib/accountRestriction";
 
 export interface SavedSearchInput {
   query?: string;
@@ -62,6 +63,7 @@ export const useCreateSavedSearch = () => {
   return useMutation({
     mutationFn: async (input: SavedSearchInput) => {
       if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const payload = { user_id: user.id, is_active: true, ...normalize(input) };
       const { data, error } = await (supabase as any)
         .from("saved_searches")
@@ -80,6 +82,8 @@ export const useToggleSavedSearch = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await (supabase as any)
         .from("saved_searches")
         .update({ is_active })
@@ -95,6 +99,8 @@ export const useDeleteSavedSearch = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      if (!user) throw new Error("Not authenticated");
+      await assertAccountCanMutate(user.id);
       const { error } = await (supabase as any).from("saved_searches").delete().eq("id", id);
       if (error) throw error;
     },

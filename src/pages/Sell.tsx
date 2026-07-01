@@ -17,6 +17,7 @@ import { SUPPORTED_CURRENCIES, COUNTRIES } from "@/lib/currency";
 import Header from "@/components/Header";
 import ImageUploader from "@/components/ImageUploader";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate } from "@/lib/accountRestriction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { VERTICALS, type Vertical } from "@/contexts/VerticalContext";
@@ -27,6 +28,8 @@ import SmartListingHelper, { type ListingSuggestion } from "@/components/ai/Smar
 import AiListingCreator from "@/components/ai/aiListing/AiListingCreator";
 import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/features";
 import { useListingAiGeneration } from "@/hooks/useListingAiGeneration";
+import { useAccountRestriction } from "@/hooks/useAccountRestriction";
+import AccountRestrictedBanner from "@/components/AccountRestrictedBanner";
 import { enrichDescriptionWithAiMeta } from "@/lib/aiListingMapper";
 import { inspectImageQuality } from "@/lib/productImagePipeline";
 import {
@@ -63,6 +66,7 @@ const Sell = () => {
   );
   const { generateFromImages, loading: aiGenerating, error: aiGenerateError } =
     useListingAiGeneration(categoryIdForSlug);
+  const { restriction, isRestricted } = useAccountRestriction();
 
   if (authLoading) return null;
   if (!user) {
@@ -138,9 +142,14 @@ const Sell = () => {
 
   const handleSubmit = async (e?: React.FormEvent, aiMeta?: AiListingAnalysis | null, missingAnswers?: Record<string, string>) => {
     e?.preventDefault();
+    if (isRestricted) {
+      toast.error(restriction!.message);
+      return;
+    }
     if (!validate({ fromAi: !!aiMeta })) { toast.error(t("sell.fillRequired")); return; }
     setSubmitting(true);
     try {
+      await assertAccountCanMutate(user.id);
       let description = draft.description.trim();
       if (aiMeta) {
         const extraAttrs = [
@@ -233,6 +242,8 @@ const Sell = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="font-display text-2xl font-bold mb-1">{t("sell.title")}</h1>
           <p className="text-muted-foreground text-sm mb-6">{t("sell.subtitle")}</p>
+
+          <AccountRestrictedBanner restriction={restriction} className="mb-6" />
 
           {ENABLE_AI_LISTING_CREATOR && creationMode === "manual" && (
             <button
@@ -647,7 +658,7 @@ const Sell = () => {
 
             <p className="text-[11px] text-muted-foreground/60 text-center">{t("sell.draftAutoSaved")}</p>
 
-            <Button variant="gold" className="w-full" type="submit" disabled={submitting}>
+            <Button variant="gold" className="w-full" type="submit" disabled={submitting || isRestricted}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Package className="h-4 w-4 mr-2" />{t("sell.publish")}</>}
             </Button>
           </form>

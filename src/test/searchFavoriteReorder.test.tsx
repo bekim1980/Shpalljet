@@ -48,7 +48,14 @@ vi.mock("@/integrations/supabase/client", () => {
 
   const profilesSelect = () => ({
     in: () => Promise.resolve({ data: [{ user_id: "seller-1", display_name: "Seller", avatar_url: "" }], error: null }),
-    eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }),
+    eq: () => ({
+      single: () => Promise.resolve({ data: null, error: null }),
+      maybeSingle: () =>
+        Promise.resolve({
+          data: { banned_at: null, suspended_until: null },
+          error: null,
+        }),
+    }),
   });
 
   const wishlistChain = () => ({

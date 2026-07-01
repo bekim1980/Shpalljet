@@ -15,6 +15,7 @@ import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
 import { useVertical, type Vertical } from "@/contexts/VerticalContext";
 import { useStartConversation } from "@/hooks/useChat";
+import { getMutationErrorMessage } from "@/lib/accountRestriction";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import { useTranslation } from "react-i18next";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
@@ -190,31 +191,35 @@ const ProductDetail = () => {
     if (!user) { toast.error(t("product.loginToMessage")); navigate("/login"); return; }
     if (!product.seller.id) { toast.info(t("product.demoProduct")); return; }
     if (user.id === product.seller.id) { toast.info(t("product.ownListing")); return; }
-    const result = await startConversation(product.id, product.seller.id);
-    if (result) {
-      const { conversationId, isNew } = result;
-      // Legacy event (kept for back-compat with existing dashboards)
-      track("message_sent", {
-        dedupeKey: `${product.id}:${prefill ?? "open"}`,
-        props: { id: product.id, prefill: !!prefill, sellerId: product.seller.id },
-      });
-      // Fire success only when no prefill (prefill auto-sends inside Messages and tracks there)
-      if (!prefill) {
-        track("message_sent_success", {
-          dedupeKey: `open:${conversationId}`,
-          props: {
-            product_id: product.id,
-            seller_id: product.seller.id,
-            buyer_id: user.id,
-            conversation_id: conversationId,
-            is_first_message: isNew,
-            source: "product_detail",
-          },
+    try {
+      const result = await startConversation(product.id, product.seller.id);
+      if (result) {
+        const { conversationId, isNew } = result;
+        // Legacy event (kept for back-compat with existing dashboards)
+        track("message_sent", {
+          dedupeKey: `${product.id}:${prefill ?? "open"}`,
+          props: { id: product.id, prefill: !!prefill, sellerId: product.seller.id },
         });
+        // Fire success only when no prefill (prefill auto-sends inside Messages and tracks there)
+        if (!prefill) {
+          track("message_sent_success", {
+            dedupeKey: `open:${conversationId}`,
+            props: {
+              product_id: product.id,
+              seller_id: product.seller.id,
+              buyer_id: user.id,
+              conversation_id: conversationId,
+              is_first_message: isNew,
+              source: "product_detail",
+            },
+          });
+        }
+        const qs = new URLSearchParams({ conversation: conversationId });
+        if (prefill) qs.set("prefill", prefill);
+        navigate(`/messages?${qs.toString()}`);
       }
-      const qs = new URLSearchParams({ conversation: conversationId });
-      if (prefill) qs.set("prefill", prefill);
-      navigate(`/messages?${qs.toString()}`);
+    } catch (err) {
+      toast.error(getMutationErrorMessage(err, t("product.messageFailed", "Dështoi hapja e bisedës")));
     }
   };
 

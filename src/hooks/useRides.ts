@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertAccountCanMutate } from "@/lib/accountRestriction";
 
 export interface Ride {
   id: string;
@@ -108,6 +109,11 @@ export function useCreateRide() {
 
   const createRide = async (input: CreateRideInput) => {
     if (!user) return { error: new Error("Not authenticated") };
+    try {
+      await assertAccountCanMutate(user.id);
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
     setSubmitting(true);
     const { data, error } = await (supabase as any)
       .from("rides")

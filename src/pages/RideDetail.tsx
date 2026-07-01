@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRide } from "@/hooks/useRides";
 import { useAuth } from "@/hooks/useAuth";
 import { useStartConversation } from "@/hooks/useChat";
+import { getMutationErrorMessage } from "@/lib/accountRestriction";
 import { supabase } from "@/integrations/supabase/client";
 import { isLeavingSoon, isPopularRoute, seatsBadgeVariant } from "@/lib/rideHelpers";
 
@@ -42,27 +43,32 @@ export default function RideDetail() {
       return;
     }
     setContacting(true);
-    const syntheticProductId = `ride:${ride.id}`;
-    const result = await startConversation(syntheticProductId, ride.user_id);
-    if (!result) {
+    try {
+      const syntheticProductId = `ride:${ride.id}`;
+      const result = await startConversation(syntheticProductId, ride.user_id);
+      if (!result) {
+        toast.error(t("common.error", "Something went wrong"));
+        return;
+      }
+      if (result.isNew) {
+        const intro = t(
+          "rides.introMessage",
+          `Hi, I'm interested in your ride: ${ride.from_city} → ${ride.to_city} on ${formatDate(ride.departure_time)}.`,
+          { from: ride.from_city, to: ride.to_city, when: formatDate(ride.departure_time) },
+        );
+        const { error: msgError } = await supabase.from("messages").insert({
+          conversation_id: result.conversationId,
+          sender_id: user.id,
+          content: intro,
+        });
+        if (msgError) throw msgError;
+      }
+      navigate(`/messages?conversation=${result.conversationId}`);
+    } catch (err) {
+      toast.error(getMutationErrorMessage(err, t("common.error", "Something went wrong")));
+    } finally {
       setContacting(false);
-      toast.error(t("common.error", "Something went wrong"));
-      return;
     }
-    if (result.isNew) {
-      const intro = t(
-        "rides.introMessage",
-        `Hi, I'm interested in your ride: ${ride.from_city} → ${ride.to_city} on ${formatDate(ride.departure_time)}.`,
-        { from: ride.from_city, to: ride.to_city, when: formatDate(ride.departure_time) },
-      );
-      await supabase.from("messages").insert({
-        conversation_id: result.conversationId,
-        sender_id: user.id,
-        content: intro,
-      });
-    }
-    setContacting(false);
-    navigate(`/messages?conversation=${result.conversationId}`);
   };
 
   const handleBoost = () => {

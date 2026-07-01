@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useStartConversation } from "@/hooks/useChat";
+import { getMutationErrorMessage } from "@/lib/accountRestriction";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -100,11 +101,13 @@ const MakeOfferDialog = ({
         });
       }
 
+      if (msgError) throw msgError;
+
       setOpen(false);
       setOfferPrice("");
       navigate(`/messages?conversation=${conversationId}`);
-    } catch {
-      toast.error(t("product.offerFailed"));
+    } catch (err) {
+      toast.error(getMutationErrorMessage(err, t("product.offerFailed")));
     } finally {
       setSending(false);
     }

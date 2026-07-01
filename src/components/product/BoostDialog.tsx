@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useUpdateListing } from "@/hooks/useMyListings";
+import { getMutationErrorMessage } from "@/lib/accountRestriction";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { track } from "@/lib/analytics";
@@ -67,7 +68,7 @@ const BoostDialog = ({ productId, productTitle, trigger, currentBoostExpiresAt }
           setOpen(false);
           setStep("choose");
         },
-        onError: () => toast.error("Could not start boost. Try again."),
+        onError: (err) => toast.error(getMutationErrorMessage(err, "Could not start boost. Try again.")),
       },
     );
   };
