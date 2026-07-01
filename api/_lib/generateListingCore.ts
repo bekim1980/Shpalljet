@@ -1,7 +1,8 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { parseGeminiListingJson, type GeminiListingResult } from "../../src/lib/geminiListingSchema.js";
 
-const MODEL = "gemini-3-flash-preview";
+const PRIMARY_MODEL = "gemini-3-flash-preview";
+const FALLBACK_MODEL = "gemini-2.5-flash";
 
 const SYSTEM_INSTRUCTION = `You are Shpalljet AI, an expert marketplace assistant specializing in SEO.
 
@@ -146,6 +147,70 @@ function logOriginalGeminiSdkError(err: unknown): void {
   );
 }
 
+function getGeminiErrorStatus(err: unknown): number | undefined {
+  return (
+    (err as { status?: number })?.status ??
+    (err as { error?: { code?: number } })?.error?.code
+  );
+}
+
+export function isGeminiUnavailableError(err: unknown): boolean {
+  const status = getGeminiErrorStatus(err);
+  if (status === 503) return true;
+
+  const nestedError = (err as { error?: Record<string, unknown> })?.error;
+  if (nestedError?.code === 503) return true;
+  if (nestedError?.status === "UNAVAILABLE") return true;
+
+  const message = err instanceof Error ? err.message : String(err);
+  const parsedMessage = tryParseJsonMessage(message);
+  if (parsedMessage && typeof parsedMessage === "object" && parsedMessage !== null) {
+    const errorObj = (parsedMessage as { error?: Record<string, unknown> }).error;
+    if (errorObj?.code === 503) return true;
+    if (errorObj?.status === "UNAVAILABLE") return true;
+  }
+
+  return /503|unavailable/i.test(message);
+}
+
+function buildGenerateConfig(model: string) {
+  const config = {
+    systemInstruction: SYSTEM_INSTRUCTION,
+    temperature: 0.4,
+    responseMimeType: "application/json" as const,
+  };
+
+  if (model === PRIMARY_MODEL) {
+    return {
+      ...config,
+      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+    };
+  }
+
+  return config;
+}
+
+type ContentPart = { text?: string; inlineData?: { mimeType: string; data: string } };
+
+async function generateListingText(
+  ai: GoogleGenAI,
+  model: string,
+  parts: ContentPart[],
+): Promise<string> {
+  const response = await ai.models.generateContent({
+    model,
+    contents: { role: "user", parts },
+    config: buildGenerateConfig(model),
+  });
+
+  const text = response.text?.trim();
+  if (!text) {
+    throw new Error("empty_response");
+  }
+
+  return text;
+}
+
 function mapGeminiError(err: unknown): never {
   const status =
     (err as { status?: number })?.status ??
@@ -178,8 +243,7 @@ export async function generateListingFromGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> =
-    [];
+  const parts: ContentPart[] = [];
 
   if (input.userText?.trim()) {
     parts.push({ text: `Seller notes: ${input.userText.trim()}` });
@@ -199,28 +263,35 @@ export async function generateListingFromGemini(
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: { role: "user", parts },
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.4,
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
-      },
-    });
-
-    const text = response.text?.trim();
-    if (!text) {
-      throw new Error("empty_response");
-    }
-
+    const text = await generateListingText(ai, PRIMARY_MODEL, parts);
     return parseGeminiListingJson(text);
   } catch (err) {
     if (err instanceof Error) {
       if (err.message === "empty_response") throw err;
       if (err.message === "rate_limit" || err.message === "gemini_auth") throw err;
     }
+
+    if (isGeminiUnavailableError(err)) {
+      logOriginalGeminiSdkError(err);
+      console.error(
+        `Gemini primary model unavailable (${PRIMARY_MODEL}), retrying with ${FALLBACK_MODEL}`,
+      );
+
+      try {
+        const text = await generateListingText(ai, FALLBACK_MODEL, parts);
+        return parseGeminiListingJson(text);
+      } catch (fallbackErr) {
+        if (fallbackErr instanceof Error) {
+          if (fallbackErr.message === "empty_response") throw fallbackErr;
+          if (fallbackErr.message === "rate_limit" || fallbackErr.message === "gemini_auth") {
+            throw fallbackErr;
+          }
+        }
+        logOriginalGeminiSdkError(fallbackErr);
+        mapGeminiError(fallbackErr);
+      }
+    }
+
     logOriginalGeminiSdkError(err);
     mapGeminiError(err);
   }
