@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useAdmin";
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
 import { REGIONS, SUPPORTED_CURRENCIES } from "@/lib/currency";
@@ -12,6 +13,7 @@ import NotificationsDropdown from "@/components/NotificationsDropdown";
 const Header = () => {
   const { user, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { unreadCount: messageUnreadCount } = useUnreadMessageCount();
   const { t, i18n } = useTranslation();
   const { region, setRegion, currency, setCurrency } = useLocale();
 
@@ -90,9 +92,14 @@ const Header = () => {
           {user ? (
             <>
               <NotificationsDropdown />
-              <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+              <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
                 <Link to="/messages">
                   <MessageCircle className="h-5 w-5" />
+                  {messageUnreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                      {messageUnreadCount > 9 ? "9+" : messageUnreadCount}
+                    </span>
+                  )}
                 </Link>
               </Button>
               <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex h-9 w-9">

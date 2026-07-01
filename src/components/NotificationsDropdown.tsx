@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
 import { useNotifications, useMarkNotificationRead, useMarkAllRead } from "@/hooks/useNotifications";
+import { stripNotificationInternalMarkers } from "@/lib/messageNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { sq, enUS } from "date-fns/locale";
 
@@ -37,7 +38,7 @@ const NotificationsDropdown = () => {
           {!notifications?.length ? (<div className="p-6 text-center text-sm text-muted-foreground">{t("notifications.noNotifications")}</div>) : (
             notifications.map((n) => {
               // Hide internal idempotency marker like "[pid:xxx|to:123]" from user-facing copy
-              const cleanMessage = (n.message ?? "").replace(/\s*\[pid:[^\]]+\]\s*$/, "").trim();
+              const cleanMessage = stripNotificationInternalMarkers(n.message ?? "");
               return (
                 <button key={n.id} onClick={() => handleClick(n)} className={`w-full text-left p-3 border-b border-border/30 hover:bg-secondary/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}>
                   <div className="flex items-start gap-2">

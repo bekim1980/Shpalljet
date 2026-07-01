@@ -1,7 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { assertAccountCanMutate } from "@/lib/accountRestriction";
+import {
+  NEW_MESSAGE_TYPE,
+  messageConversationLink,
+} from "@/lib/messageNotifications";
+import { messageUnreadCountQueryKey } from "@/hooks/useUnreadMessageCount";
 import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 
 export interface Conversation {
@@ -76,8 +82,21 @@ export function useConversations() {
 
 export function useMessages(conversationId: string | null) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const markConversationNotificationsRead = useCallback(async () => {
+    if (!user || !conversationId) return;
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("type", NEW_MESSAGE_TYPE)
+      .eq("link", messageConversationLink(conversationId))
+      .eq("read", false);
+    queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+  }, [user, conversationId, queryClient]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -105,6 +124,10 @@ export function useMessages(conversationId: string | null) {
           .eq("conversation_id", conversationId)
           .neq("sender_id", user.id)
           .eq("read", false);
+        await markConversationNotificationsRead();
+        queryClient.invalidateQueries({
+          queryKey: messageUnreadCountQueryKey(user.id),
+        });
       }
     };
 
@@ -130,6 +153,10 @@ export function useMessages(conversationId: string | null) {
               .from("messages")
               .update({ read: true })
               .eq("id", payload.new.id);
+            markConversationNotificationsRead();
+            queryClient.invalidateQueries({
+              queryKey: messageUnreadCountQueryKey(user.id),
+            });
           }
         }
       )
@@ -138,7 +165,7 @@ export function useMessages(conversationId: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [conversationId, user, markConversationNotificationsRead, queryClient]);
 
   const sendMessage = async (content: string) => {
     if (!conversationId || !user) return;
