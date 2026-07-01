@@ -38,8 +38,8 @@ Return ONLY valid JSON.
 const GENERATION_CONFIG = {
   temperature: 0.4,
   max_output_tokens: 65536,
-  topP: 0.95,
-  thinkingLevel: "high" as const,
+  top_p: 0.95,
+  thinking_level: "high" as const,
 };
 
 export interface GenerateListingInput {
