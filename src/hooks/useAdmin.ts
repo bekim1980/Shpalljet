@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  listingVisibilityAuditAction,
+  listingVisibilityStatus,
+} from "@/lib/adminListingVisibility";
 import { toast } from "sonner";
 
 export const useIsAdmin = () => {
@@ -133,10 +137,34 @@ export const useDeleteProduct = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["admin-pending"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["audit-logs"] });
       toast.success("Listimi u fshi");
     },
     onError: () => toast.error("Gabim gjatë fshirjes"),
+  });
+};
+
+export const useSetListingVisibility = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, visible }: { id: string; visible: boolean }) => {
+      const status = listingVisibilityStatus(visible);
+      const { error } = await supabase.from("products").update({ status }).eq("id", id);
+      if (error) throw error;
+      if (user) {
+        await insertAuditLog(user.id, listingVisibilityAuditAction(visible), "product", id);
+      }
+    },
+    onSuccess: (_data, { visible }) => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      qc.invalidateQueries({ queryKey: ["admin-pending"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["audit-logs"] });
+      toast.success(visible ? "Listimi u shfaq përsëri" : "Listimi u fsheh");
+    },
+    onError: () => toast.error("Gabim gjatë përditësimit të listimit"),
   });
 };
 

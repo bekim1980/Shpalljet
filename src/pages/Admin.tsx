@@ -15,6 +15,7 @@ import {
   useAdminReports,
   useAdminPendingListings,
   useDeleteProduct,
+  useSetListingVisibility,
   useModerateProduct,
   useBanUser,
   useUpdateReportStatus,
@@ -23,7 +24,8 @@ import {
 import StatsCards from "@/components/admin/StatsCards";
 import ListingDetailDialog from "@/components/admin/ListingDetailDialog";
 import UserDetailDialog from "@/components/admin/UserDetailDialog";
-import { Loader2, ShieldCheck, Trash2, CheckCircle, XCircle, Ban, Clock, Eye, ScrollText } from "lucide-react";
+import { Loader2, ShieldCheck, Trash2, CheckCircle, XCircle, Ban, Clock, Eye, EyeOff, ScrollText } from "lucide-react";
+import { shouldShowHideListing, shouldShowUnhideListing } from "@/lib/adminListingVisibility";
 import { format } from "date-fns";
 
 const AUDIT_ACTIONS = [
@@ -31,6 +33,8 @@ const AUDIT_ACTIONS = [
   { value: "approve_listing", label: "Aprovo listim" },
   { value: "reject_listing", label: "Refuzo listim" },
   { value: "delete_listing", label: "Fshi listim" },
+  { value: "hide_listing", label: "Fshihe listim" },
+  { value: "unhide_listing", label: "Shfaq listim" },
   { value: "suspend_user", label: "Pezullo përdorues" },
   { value: "restore_user", label: "Rivendos përdorues" },
 ];
@@ -183,6 +187,7 @@ const AuditTab = () => {
 const ListingsTab = () => {
   const { data: products, isLoading } = useAdminProducts();
   const deleteMut = useDeleteProduct();
+  const visibilityMut = useSetListingVisibility();
   const [selected, setSelected] = useState<any>(null);
 
   if (isLoading) return <Loading />;
@@ -221,14 +226,36 @@ const ListingsTab = () => {
                     {format(new Date(p.created_at), "dd/MM/yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); deleteMut.mutate(p.id); }}
-                      disabled={deleteMut.isPending}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Fshi
-                    </Button>
+                    <span className="inline-flex flex-wrap justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                      {shouldShowHideListing(p.status) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => visibilityMut.mutate({ id: p.id, visible: false })}
+                          disabled={visibilityMut.isPending || deleteMut.isPending}
+                        >
+                          <EyeOff className="h-3.5 w-3.5 mr-1" /> Fshihe
+                        </Button>
+                      )}
+                      {shouldShowUnhideListing(p.status) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => visibilityMut.mutate({ id: p.id, visible: true })}
+                          disabled={visibilityMut.isPending || deleteMut.isPending}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" /> Shfaq
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteMut.mutate(p.id)}
+                        disabled={deleteMut.isPending || visibilityMut.isPending}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Fshi
+                      </Button>
+                    </span>
                   </TableCell>
                 </TableRow>
               ))}
