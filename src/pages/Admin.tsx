@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +24,14 @@ import {
 import StatsCards from "@/components/admin/StatsCards";
 import ListingDetailDialog from "@/components/admin/ListingDetailDialog";
 import UserDetailDialog from "@/components/admin/UserDetailDialog";
-import { Loader2, ShieldCheck, Trash2, CheckCircle, XCircle, Ban, Clock, Eye, EyeOff, ScrollText } from "lucide-react";
+import { Loader2, ShieldCheck, Trash2, CheckCircle, XCircle, Ban, Clock, Eye, EyeOff, ScrollText, User as UserIcon, ExternalLink } from "lucide-react";
 import { shouldShowHideListing, shouldShowUnhideListing } from "@/lib/adminListingVisibility";
+import {
+  adminReportListingPath,
+  isListingReport,
+  isUserBanned,
+  isUserReport,
+} from "@/lib/adminReportModeration";
 import { format } from "date-fns";
 
 const AUDIT_ACTIONS = [
@@ -35,6 +41,8 @@ const AUDIT_ACTIONS = [
   { value: "delete_listing", label: "Fshi listim" },
   { value: "hide_listing", label: "Fshihe listim" },
   { value: "unhide_listing", label: "Shfaq listim" },
+  { value: "review_report", label: "Shqyrto raport" },
+  { value: "resolve_report", label: "Zgjidh raport" },
   { value: "suspend_user", label: "Pezullo përdorues" },
   { value: "restore_user", label: "Rivendos përdorues" },
 ];
@@ -43,6 +51,7 @@ const AUDIT_TARGET_TYPES = [
   { value: "", label: "Të gjitha" },
   { value: "product", label: "Produkt" },
   { value: "user", label: "Përdorues" },
+  { value: "report", label: "Raport" },
 ];
 
 const Admin = () => {
@@ -349,56 +358,198 @@ const UsersTab = () => {
 /* ───── Reports ───── */
 const ReportsTab = () => {
   const { data: reports, isLoading } = useAdminReports();
+  const { data: profiles } = useAdminProfiles();
   const updateMut = useUpdateReportStatus();
+  const deleteMut = useDeleteProduct();
+  const visibilityMut = useSetListingVisibility();
+  const banMut = useBanUser();
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+
+  const actionPending =
+    updateMut.isPending || deleteMut.isPending || visibilityMut.isPending || banMut.isPending;
 
   if (isLoading) return <Loading />;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Raportet ({reports?.length ?? 0})</CardTitle>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tipi</TableHead>
-              <TableHead>Arsyeja</TableHead>
-              <TableHead>Përshkrimi</TableHead>
-              <TableHead>Statusi</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead className="text-right">Veprime</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports?.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell><Badge variant="outline">{r.reported_type}</Badge></TableCell>
-                <TableCell className="font-medium">{r.reason}</TableCell>
-                <TableCell className="max-w-[200px] truncate text-muted-foreground">{r.description}</TableCell>
-                <TableCell><Badge variant={r.status === "pending" ? "default" : "secondary"}>{r.status}</Badge></TableCell>
-                <TableCell className="text-muted-foreground text-xs">{format(new Date(r.created_at), "dd/MM/yyyy")}</TableCell>
-                <TableCell className="text-right space-x-1">
-                  {r.status === "pending" && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => updateMut.mutate({ id: r.id, status: "reviewed" })} disabled={updateMut.isPending}>
-                        <Eye className="h-3.5 w-3.5 mr-1" /> Shqyrto
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => updateMut.mutate({ id: r.id, status: "resolved" })} disabled={updateMut.isPending}>
-                        <CheckCircle className="h-3.5 w-3.5 mr-1" /> Zgjidh
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
+    <>
+      <UserDetailDialog
+        profile={selectedProfile}
+        open={!!selectedProfile}
+        onOpenChange={(o) => !o && setSelectedProfile(null)}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Raportet ({reports?.length ?? 0})</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tipi</TableHead>
+                <TableHead>Objekti</TableHead>
+                <TableHead>Arsyeja</TableHead>
+                <TableHead>Përshkrimi</TableHead>
+                <TableHead>Statusi</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Veprime</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {(!reports || reports.length === 0) && (
-          <p className="text-center text-muted-foreground py-8">Nuk ka raporte.</p>
-        )}
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {reports?.map((r) => {
+                const profile =
+                  isUserReport(r.reported_type)
+                    ? profiles?.find((p) => p.user_id === r.reported_id)
+                    : undefined;
+                const userBanned = isUserBanned(profile?.banned_at);
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell><Badge variant="outline">{r.reported_type}</Badge></TableCell>
+                    <TableCell className="max-w-[160px]">
+                      {isListingReport(r.reported_type) ? (
+                        <Button variant="link" size="sm" className="h-auto p-0 text-primary" asChild>
+                          <Link to={adminReportListingPath(r.reported_id)} target="_blank" rel="noopener noreferrer">
+                            <span className="inline-flex items-center gap-1 max-w-[150px]">
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{r.listing_title || "Listimi"}</span>
+                            </span>
+                          </Link>
+                        </Button>
+                      ) : isUserReport(r.reported_type) ? (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-primary"
+                          onClick={() => profile && setSelectedProfile(profile)}
+                          disabled={!profile}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            <UserIcon className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[130px]">
+                              {profile?.display_name || "Përdoruesi"}
+                            </span>
+                          </span>
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">{r.reported_id}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{r.reason}</TableCell>
+                    <TableCell className="max-w-[200px] truncate text-muted-foreground">{r.description}</TableCell>
+                    <TableCell><Badge variant={r.status === "pending" ? "default" : "secondary"}>{r.status}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{format(new Date(r.created_at), "dd/MM/yyyy")}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex flex-wrap justify-end gap-1">
+                        {isListingReport(r.reported_type) && (
+                          <>
+                            <Button variant="outline" size="sm" asChild disabled={actionPending}>
+                              <Link to={adminReportListingPath(r.reported_id)} target="_blank" rel="noopener noreferrer">
+                                <Eye className="h-3.5 w-3.5 mr-1" /> Shiko
+                              </Link>
+                            </Button>
+                            {shouldShowHideListing(r.listing_status ?? "") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => visibilityMut.mutate({ id: r.reported_id, visible: false })}
+                                disabled={actionPending}
+                              >
+                                <EyeOff className="h-3.5 w-3.5 mr-1" /> Fshihe
+                              </Button>
+                            )}
+                            {shouldShowUnhideListing(r.listing_status ?? "") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => visibilityMut.mutate({ id: r.reported_id, visible: true })}
+                                disabled={actionPending}
+                              >
+                                <Eye className="h-3.5 w-3.5 mr-1" /> Shfaq
+                              </Button>
+                            )}
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteMut.mutate(r.reported_id)}
+                              disabled={actionPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" /> Fshi
+                            </Button>
+                          </>
+                        )}
+                        {isUserReport(r.reported_type) && profile && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedProfile(profile)}
+                              disabled={actionPending}
+                            >
+                              <UserIcon className="h-3.5 w-3.5 mr-1" /> Profili
+                            </Button>
+                            {!userBanned ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => banMut.mutate({ userId: r.reported_id, action: "suspend" })}
+                                  disabled={actionPending}
+                                >
+                                  <Clock className="h-3.5 w-3.5 mr-1" /> 7 ditë
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => banMut.mutate({ userId: r.reported_id, action: "ban" })}
+                                  disabled={actionPending}
+                                >
+                                  <Ban className="h-3.5 w-3.5 mr-1" /> Bllo
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => banMut.mutate({ userId: r.reported_id, action: "unban" })}
+                                disabled={actionPending}
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Zhbllo
+                              </Button>
+                            )}
+                          </>
+                        )}
+                        {r.status === "pending" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateMut.mutate({ id: r.id, status: "reviewed" })}
+                              disabled={actionPending}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" /> Shqyrto
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => updateMut.mutate({ id: r.id, status: "resolved" })}
+                              disabled={actionPending}
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" /> Zgjidh
+                            </Button>
+                          </>
+                        )}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          {(!reports || reports.length === 0) && (
+            <p className="text-center text-muted-foreground py-8">Nuk ka raporte.</p>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

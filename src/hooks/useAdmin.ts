@@ -5,7 +5,21 @@ import {
   listingVisibilityAuditAction,
   listingVisibilityStatus,
 } from "@/lib/adminListingVisibility";
+import { reportStatusAuditAction } from "@/lib/adminReportModeration";
 import { toast } from "sonner";
+
+export type AdminReport = {
+  id: string;
+  reporter_id: string;
+  reported_type: string;
+  reported_id: string;
+  reason: string;
+  description: string;
+  status: string;
+  created_at: string;
+  listing_status?: string | null;
+  listing_title?: string | null;
+};
 
 export const useIsAdmin = () => {
   const { user } = useAuth();
@@ -56,13 +70,39 @@ export const useAdminProfiles = () => {
 export const useAdminReports = () => {
   return useQuery({
     queryKey: ["admin-reports"],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<AdminReport[]> => {
       const { data, error } = await supabase
         .from("reports")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const reports = data ?? [];
+      if (reports.length === 0) return [];
+
+      const productIds = [
+        ...new Set(
+          reports.filter((r) => r.reported_type === "product").map((r) => r.reported_id),
+        ),
+      ];
+
+      const { data: products } =
+        productIds.length > 0
+          ? await supabase.from("products").select("id, title, status").in("id", productIds)
+          : { data: [] as { id: string; title: string; status: string }[] };
+
+      const productMap = new Map((products ?? []).map((p) => [p.id, p]));
+
+      return reports.map((r) => ({
+        ...r,
+        listing_status:
+          r.reported_type === "product"
+            ? (productMap.get(r.reported_id)?.status ?? null)
+            : null,
+        listing_title:
+          r.reported_type === "product"
+            ? (productMap.get(r.reported_id)?.title ?? null)
+            : null,
+      }));
     },
   });
 };
@@ -137,6 +177,7 @@ export const useDeleteProduct = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["admin-pending"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["audit-logs"] });
       toast.success("Listimi u fshi");
@@ -160,6 +201,7 @@ export const useSetListingVisibility = () => {
     onSuccess: (_data, { visible }) => {
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["admin-pending"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["audit-logs"] });
       toast.success(visible ? "Listimi u shfaq përsëri" : "Listimi u fsheh");
@@ -211,6 +253,7 @@ export const useBanUser = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-profiles"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
       qc.invalidateQueries({ queryKey: ["audit-logs"] });
       toast.success("Statusi i përdoruesit u përditësua");
     },
@@ -220,13 +263,19 @@ export const useBanUser = () => {
 
 export const useUpdateReportStatus = () => {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from("reports").update({ status }).eq("id", id);
       if (error) throw error;
+      const auditAction = reportStatusAuditAction(status);
+      if (user && auditAction) {
+        await insertAuditLog(user.id, auditAction, "report", id, { status });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-reports"] });
+      qc.invalidateQueries({ queryKey: ["audit-logs"] });
       toast.success("Raporti u përditësua");
     },
     onError: () => toast.error("Gabim"),
