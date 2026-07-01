@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { parseGeminiListingJson, type GeminiListingResult } from "../../src/lib/geminiListingSchema.js";
 
-const MODEL = "models/gemini-3-flash-preview";
+const MODEL = "gemini-3-flash-preview";
 
 const SYSTEM_INSTRUCTION = `You are Shpalljet AI, an expert marketplace assistant specializing in SEO.
 
@@ -35,13 +35,6 @@ Return ONLY valid JSON.
   "price_estimate": ""
 }`;
 
-const GENERATION_CONFIG = {
-  temperature: 0.4,
-  max_output_tokens: 65536,
-  top_p: 0.95,
-  thinking_level: "high" as const,
-};
-
 export interface GenerateListingInput {
   images: Array<{ data: string; mimeType?: string }>;
   userText?: string;
@@ -49,6 +42,28 @@ export interface GenerateListingInput {
 
 function stripDataUrl(data: string): string {
   return data.replace(/^data:image\/\w+;base64,/, "");
+}
+
+function sanitizeForLog(text: string): string {
+  return text
+    .replace(/AIza[A-Za-z0-9_-]{20,}/g, "[REDACTED_API_KEY]")
+    .replace(/GEMINI_API_KEY[=:\s]+\S+/gi, "GEMINI_API_KEY=[REDACTED]");
+}
+
+function logGeminiError(err: unknown): void {
+  const status =
+    (err as { status?: number })?.status ??
+    (err as { error?: { code?: number } })?.error?.code;
+
+  const message =
+    err instanceof Error
+      ? sanitizeForLog(`${err.name}: ${err.message}`)
+      : sanitizeForLog(String(err));
+
+  console.error(
+    "Gemini API error:",
+    [message, status ? `status=${status}` : null].filter(Boolean).join(" | "),
+  );
 }
 
 function mapGeminiError(err: unknown): never {
@@ -63,7 +78,7 @@ function mapGeminiError(err: unknown): never {
   if (/429|rate.?limit/i.test(message)) throw new Error("rate_limit");
   if (/403|401|api.?key|permission/i.test(message)) throw new Error("gemini_auth");
 
-  console.error("Gemini SDK error:", err);
+  logGeminiError(err);
   throw new Error("gemini_error");
 }
 
@@ -84,40 +99,39 @@ export async function generateListingFromGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const interactionInput: Array<
-    | { type: "text"; text: string }
-    | { type: "image"; data: string; mime_type: string }
-  > = [];
+  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> =
+    [];
 
   if (input.userText?.trim()) {
-    interactionInput.push({
-      type: "text",
-      text: `Seller notes: ${input.userText.trim()}`,
-    });
+    parts.push({ text: `Seller notes: ${input.userText.trim()}` });
   }
 
-  interactionInput.push({
-    type: "text",
+  parts.push({
     text: "Analyze the uploaded product images and return the listing JSON.",
   });
 
   for (const img of input.images) {
-    interactionInput.push({
-      type: "image",
-      data: stripDataUrl(img.data),
-      mime_type: img.mimeType || "image/jpeg",
+    parts.push({
+      inlineData: {
+        mimeType: img.mimeType || "image/jpeg",
+        data: stripDataUrl(img.data),
+      },
     });
   }
 
   try {
-    const interaction = await ai.interactions.create({
+    const response = await ai.models.generateContent({
       model: MODEL,
-      input: interactionInput,
-      system_instruction: SYSTEM_INSTRUCTION,
-      generation_config: GENERATION_CONFIG,
+      contents: { role: "user", parts },
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.4,
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingLevel: "HIGH" },
+      },
     });
 
-    const text = interaction.output_text?.trim();
+    const text = response.text?.trim();
     if (!text) {
       throw new Error("empty_response");
     }
