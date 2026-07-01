@@ -1,21 +1,30 @@
-/** Client-side product image encoding: EXIF-aware resize, metadata strip, multi-variant output. */
+/**
+ * Client-side product image encoding: EXIF-aware resize, metadata strip, multi-variant output.
+ * Yields to the main thread between steps to avoid blocking UI on mobile.
+ */
+import {
+  ENCODE_RETRIES,
+  IMAGE_QUALITY,
+  IMAGE_VARIANT_MAX,
+  emitPipelineHook,
+  type EncodedVariantName,
+} from "./imagePipelineConfig";
+import {
+  validateImageFile,
+  ImageValidationError,
+  type ValidatedImage,
+} from "./imageValidation";
 
-export const IMAGE_VARIANT_MAX = {
-  thumb: 320,
-  card: 640,
-  listing: 1280,
-  large: 1920,
-  ai: 1280,
-} as const;
-
-export type ProductImageVariant = keyof typeof IMAGE_VARIANT_MAX;
+export {
+  IMAGE_VARIANT_MAX,
+  IMAGE_QUALITY,
+  type EncodedVariantName,
+  type ProductImageVariant,
+} from "./imagePipelineConfig";
 
 export const LOW_QUALITY_THRESHOLD_PX = 500;
-
-export const AI_JPEG_QUALITY = 0.82;
-export const WEBP_QUALITY = 0.82;
-
-export type EncodedVariantName = "thumb" | "card" | "listing" | "large" | "ai";
+export const AI_JPEG_QUALITY = IMAGE_QUALITY.jpeg;
+export const WEBP_QUALITY = IMAGE_QUALITY.webp;
 
 export interface EncodedProductImage {
   longestSide: number;
@@ -25,6 +34,17 @@ export interface EncodedProductImage {
 }
 
 let webpSupported: boolean | null = null;
+
+/** Yield to the browser so encoding does not freeze the UI. */
+export function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
 
 export async function supportsWebP(): Promise<boolean> {
   if (webpSupported !== null) return webpSupported;
@@ -40,7 +60,7 @@ export async function supportsWebP(): Promise<boolean> {
         resolve(webpSupported);
       },
       "image/webp",
-      WEBP_QUALITY,
+      IMAGE_QUALITY.webp,
     );
   });
 }
@@ -50,7 +70,7 @@ export async function loadOrientedBitmap(file: File): Promise<ImageBitmap> {
     try {
       return await createImageBitmap(file, { imageOrientation: "from-image" });
     } catch {
-      // Fall through to Image() loader.
+      // Fall through to Image() loader (HEIC / older browsers).
     }
   }
 
@@ -69,6 +89,15 @@ export async function loadOrientedBitmap(file: File): Promise<ImageBitmap> {
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export async function decodeImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number }> {
+  const bitmap = await loadOrientedBitmap(file);
+  const dims = { width: bitmap.width, height: bitmap.height };
+  bitmap.close();
+  return dims;
 }
 
 function bitmapToBlob(
@@ -99,54 +128,120 @@ function bitmapToBlob(
   });
 }
 
+export async function validateProductImage(file: File): Promise<ValidatedImage> {
+  const result = await validateImageFile(file, decodeImageDimensions);
+  if (result.ok === false) {
+    throw new ImageValidationError(result.code, result.message);
+  }
+  return result;
+}
+
 export async function inspectImageQuality(
   file: File,
 ): Promise<{ longestSide: number; isLowQuality: boolean }> {
-  const bitmap = await loadOrientedBitmap(file);
-  const longestSide = Math.max(bitmap.width, bitmap.height);
-  bitmap.close();
-  return {
-    longestSide,
-    isLowQuality: longestSide < LOW_QUALITY_THRESHOLD_PX,
-  };
+  try {
+    const validated = await validateProductImage(file);
+    return {
+      longestSide: validated.longestSide,
+      isLowQuality: validated.isLowQuality,
+    };
+  } catch {
+    const bitmap = await loadOrientedBitmap(file);
+    const longestSide = Math.max(bitmap.width, bitmap.height);
+    bitmap.close();
+    return {
+      longestSide,
+      isLowQuality: longestSide < LOW_QUALITY_THRESHOLD_PX,
+    };
+  }
 }
 
-/** Encode all storage + AI variants from one source file. Never upscales. */
+const VARIANT_ENCODE_ORDER: EncodedVariantName[] = [
+  "thumb",
+  "card",
+  "listing",
+  "large",
+  "ai",
+];
+
+/** Encode all storage + AI variants. Sequential with yields — memory efficient, non-blocking. */
 export async function encodeProductImageVariants(file: File): Promise<EncodedProductImage> {
+  emitPipelineHook({ stage: "encode", fileName: file.name });
+
   const bitmap = await loadOrientedBitmap(file);
   const longestSide = Math.max(bitmap.width, bitmap.height);
   const useWebp = await supportsWebP();
   const displayMime = useWebp ? "image/webp" : "image/jpeg";
-  const displayQuality = useWebp ? WEBP_QUALITY : AI_JPEG_QUALITY;
+  const displayQuality = useWebp ? IMAGE_QUALITY.webp : IMAGE_QUALITY.jpeg;
+
+  const variants = {} as Record<EncodedVariantName, Blob>;
 
   try {
-    const [thumb, card, listing, large, ai] = await Promise.all([
-      bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.thumb, displayMime, displayQuality),
-      bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.card, displayMime, displayQuality),
-      bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.listing, displayMime, displayQuality),
-      bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.large, displayMime, displayQuality),
-      bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.ai, "image/jpeg", AI_JPEG_QUALITY),
-    ]);
+    for (const name of VARIANT_ENCODE_ORDER) {
+      await yieldToMain();
+      const max = IMAGE_VARIANT_MAX[name];
+      const mime = name === "ai" ? "image/jpeg" : displayMime;
+      const quality = name === "ai" ? IMAGE_QUALITY.jpeg : displayQuality;
+      variants[name] = await bitmapToBlob(bitmap, max, mime, quality);
+    }
 
     return {
       longestSide,
       isLowQuality: longestSide < LOW_QUALITY_THRESHOLD_PX,
       useWebp,
-      variants: { thumb, card, listing, large, ai },
+      variants,
     };
   } finally {
     bitmap.close();
   }
 }
 
-/** AI-only variant (1280px JPEG @ 82%) — never send originals to Gemini. */
-export async function encodeImageForAi(file: File): Promise<Blob> {
+/** Single-pass legacy JPEG (1920px max) when multi-variant optimization fails. */
+export async function encodeLegacyListingJpeg(file: File): Promise<Blob> {
   const bitmap = await loadOrientedBitmap(file);
   try {
-    return await bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.ai, "image/jpeg", AI_JPEG_QUALITY);
+    return await bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.large, "image/jpeg", IMAGE_QUALITY.jpeg);
   } finally {
     bitmap.close();
   }
+}
+
+/** Last-resort AI JPEG at 1280px when primary AI encode fails. */
+export async function encodeLegacyAiJpeg(file: File): Promise<Blob> {
+  const bitmap = await loadOrientedBitmap(file);
+  try {
+    return await bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.ai, "image/jpeg", IMAGE_QUALITY.jpeg);
+  } finally {
+    bitmap.close();
+  }
+}
+
+/** AI variant (1280px JPEG @ 82%) — never send originals to Gemini. */
+export async function encodeImageForAi(file: File): Promise<Blob> {
+  emitPipelineHook({ stage: "ai", fileName: file.name });
+  const bitmap = await loadOrientedBitmap(file);
+  try {
+    return await bitmapToBlob(bitmap, IMAGE_VARIANT_MAX.ai, "image/jpeg", IMAGE_QUALITY.jpeg);
+  } finally {
+    bitmap.close();
+  }
+}
+
+/** Encode with one retry — used before legacy fallback upload. */
+export async function encodeProductImageVariantsWithRetry(
+  file: File,
+): Promise<EncodedProductImage> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= ENCODE_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) await yieldToMain();
+      return await encodeProductImageVariants(file);
+    } catch (err) {
+      lastError = err;
+      console.warn(`Image encode attempt ${attempt + 1} failed`, err);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Image encoding failed");
 }
 
 export function getVariantExtension(useWebp: boolean, variant: EncodedVariantName): string {

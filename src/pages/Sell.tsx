@@ -29,7 +29,10 @@ import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/feature
 import { useListingAiGeneration } from "@/hooks/useListingAiGeneration";
 import { enrichDescriptionWithAiMeta } from "@/lib/aiListingMapper";
 import { inspectImageQuality } from "@/lib/productImagePipeline";
-import { uploadProductImageSet } from "@/lib/uploadProductImage";
+import {
+  ImageValidationError,
+  uploadProductImageWithFallback,
+} from "@/lib/uploadProductImage";
 import type { AiListingAnalysis } from "@/types/aiListing";
 
 const verticalIcons: Record<Vertical, React.ElementType> = { luxe: Crown, market: Store, rent: Home, services: Briefcase, jobs: BriefcaseBusiness };
@@ -154,14 +157,24 @@ const Sell = () => {
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
-          const { listingUrl } = await uploadProductImageSet(supabase, user.id, file);
+          const { listingUrl } = await uploadProductImageWithFallback(supabase, user.id, file);
           imageUrls.push(listingUrl);
-        } catch (imgErr: any) {
+        } catch (imgErr: unknown) {
           console.error("Image upload failed:", imgErr);
-          toast.error(t("sell.imageUploadFailed", "Ngarkimi i fotos dështoi: ") + (imgErr.message || ""));
-          setSubmitting(false);
-          return;
+          if (imgErr instanceof ImageValidationError) {
+            toast.error(imgErr.message);
+            continue;
+          }
+          const msg = imgErr instanceof Error ? imgErr.message : "";
+          toast.error(t("sell.imageUploadFailed", "Ngarkimi i fotos dështoi: ") + msg);
+          continue;
         }
+      }
+
+      if (draft.selectedVertical !== "jobs" && imageUrls.length === 0) {
+        toast.error(t("sell.imageUploadFailed", "Ngarkimi i fotos dështoi."));
+        setSubmitting(false);
+        return;
       }
       // Calculate expires_at based on listing type
       const now = new Date();
