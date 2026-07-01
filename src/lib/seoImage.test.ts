@@ -8,6 +8,13 @@ describe("getValidSeoImageUrl", () => {
       "https://cdn.example.com/a.jpg",
     );
   });
+  it("prefers large pipeline variant for SEO", () => {
+    const listing =
+      "https://cdn.example.com/storage/product-images/u/id/listing.webp";
+    expect(getValidSeoImageUrl([listing])).toBe(
+      "https://cdn.example.com/storage/product-images/u/id/large.webp",
+    );
+  });
   it("accepts http://", () => {
     expect(getValidSeoImageUrl(["http://example.com/x.png"])).toBe(
       "http://example.com/x.png",

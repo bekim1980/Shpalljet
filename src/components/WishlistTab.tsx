@@ -4,6 +4,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { useProducts, categoryLabels } from "@/hooks/useProducts";
 import { useLocale } from "@/contexts/LocaleContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
+import { pickFirstValidImageUrl } from "@/lib/productImage";
 
 const WishlistTab = () => {
   const { data: wishlistSet, isLoading: wishLoading } = useWishlist();
@@ -40,8 +41,14 @@ const WishlistTab = () => {
           className="glass-card rounded-lg p-3 flex gap-3 items-center hover:bg-secondary/50 transition-colors"
         >
           <div className="w-14 h-14 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
-            {product.image_urls?.[0] ? (
-              <img src={product.image_urls[0]} alt="" className="w-full h-full object-cover" />
+            {pickFirstValidImageUrl(product.image_urls, null, "card") ? (
+              <img
+                src={pickFirstValidImageUrl(product.image_urls, null, "card")!}
+                alt=""
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-[10px]">
                 {categoryLabels[product.category] || product.category}

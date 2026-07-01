@@ -1,14 +1,17 @@
+import { pickFirstValidImageUrl } from "./productImage";
+
 export const SITE_URL = "https://www.shpalljet.net";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 /**
  * Returns the first valid absolute http(s) image URL from the provided list,
  * falling back to DEFAULT_OG_IMAGE when none qualifies.
+ * Uses the large variant for social/SEO previews when available.
  */
 export function getValidSeoImageUrl(images?: unknown): string {
   try {
     const list = Array.isArray(images) ? images : [];
-    const firstValid = list.find((image): image is string => {
+    const firstCanonical = list.find((image): image is string => {
       if (typeof image !== "string" || image.length === 0) return false;
       try {
         const url = new URL(image);
@@ -17,7 +20,8 @@ export function getValidSeoImageUrl(images?: unknown): string {
         return false;
       }
     });
-    return firstValid ?? DEFAULT_OG_IMAGE;
+    const seoUrl = pickFirstValidImageUrl(firstCanonical ? [firstCanonical] : [], null, "large");
+    return seoUrl ?? DEFAULT_OG_IMAGE;
   } catch (e) {
     console.error("SEO image error", e);
     return DEFAULT_OG_IMAGE;

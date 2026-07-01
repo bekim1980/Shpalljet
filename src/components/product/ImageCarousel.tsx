@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import SafeImage from "./SafeImage";
+import { resolveProductImageUrl } from "@/lib/productImage";
 
 interface ImageCarouselProps {
   images: string[];
@@ -125,7 +126,13 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, condition }: 
                   : "border-border/30 opacity-60 hover:opacity-90"
               }`}
             >
-              <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+              <img
+                src={resolveProductImageUrl(url, "thumb") ?? url}
+                alt=""
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
             </button>
           ))}
         </div>

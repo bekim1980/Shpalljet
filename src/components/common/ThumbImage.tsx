@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { buildProductImageSrcSet, productImageSizes } from "@/lib/productImage";
 
 interface ThumbImageProps {
   src?: string | null;
@@ -7,6 +8,8 @@ interface ThumbImageProps {
   loading?: "eager" | "lazy";
   /** Optional className applied to the wrapper (sizing/positioning). */
   wrapperClassName?: string;
+  /** Enable responsive srcset when pipeline variants exist. */
+  responsive?: boolean;
 }
 
 /**
@@ -22,9 +25,15 @@ const ThumbImage = ({
   className = "",
   loading = "lazy",
   wrapperClassName = "absolute inset-0",
+  responsive = true,
 }: ThumbImageProps) => {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+
+  const srcSet = useMemo(
+    () => (responsive && src ? buildProductImageSrcSet(src) : undefined),
+    [responsive, src],
+  );
 
   useEffect(() => {
     setLoaded(false);
@@ -47,8 +56,11 @@ const ThumbImage = ({
       ) : (
         <img
           src={src}
+          srcSet={srcSet}
+          sizes={srcSet ? productImageSizes("320px") : undefined}
           alt={alt}
           loading={loading}
+          decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
           className={`${className} transition-opacity duration-200 ${

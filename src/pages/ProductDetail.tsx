@@ -35,6 +35,7 @@ import SEO from "@/components/SEO";
 import { extractProductId, buildProductSlug } from "@/lib/productSlug";
 import { SITE_URL } from "@/components/SEO";
 import { getValidSeoImageUrl, buildProductCanonical } from "@/lib/seoImage";
+import { pickValidImageUrls } from "@/lib/productImage";
 
 // Quick messages are built at render time using the translation hook (see component below)
 
@@ -113,7 +114,7 @@ const ProductDetail = () => {
         title: dbProduct.title,
         price: Number(dbProduct.price),
         image: dbProduct.image_urls?.[0] ?? "",
-        images: dbProduct.image_urls ?? [],
+        images: pickValidImageUrls(dbProduct.image_urls, undefined, "listing"),
         seller: {
           id: dbProduct.seller_id,
           name: dbProduct.seller?.display_name ?? t("common.unknown"),

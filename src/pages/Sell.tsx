@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -28,33 +28,14 @@ import AiListingCreator from "@/components/ai/aiListing/AiListingCreator";
 import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/features";
 import { useListingAiGeneration } from "@/hooks/useListingAiGeneration";
 import { enrichDescriptionWithAiMeta } from "@/lib/aiListingMapper";
+import { inspectImageQuality } from "@/lib/productImagePipeline";
+import { uploadProductImageSet } from "@/lib/uploadProductImage";
 import type { AiListingAnalysis } from "@/types/aiListing";
 
 const verticalIcons: Record<Vertical, React.ElementType> = { luxe: Crown, market: Store, rent: Home, services: Briefcase, jobs: BriefcaseBusiness };
 const contactIcons: Record<string, React.ElementType> = { chat: MessageSquare, phone: Phone, whatsapp: Send, viber: Phone };
 
-const compressImage = (file: File, maxDim: number, quality: number): Promise<Blob> =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("Canvas not supported")); return; }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (b) => { if (b) resolve(b); else reject(new Error("Compression failed")); },
-        "image/jpeg",
-        quality
-      );
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
-    img.src = url;
-  });
+const fileQualityKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`;
 
 const Sell = () => {
   const { user, loading: authLoading } = useAuth();
@@ -71,6 +52,7 @@ const Sell = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creationMode, setCreationMode] = useState<"manual" | "ai">("manual");
   const [aiUserNotes, setAiUserNotes] = useState("");
+  const warnedLowQuality = useRef(new Set<string>());
 
   const categoryIdForSlug = useCallback(
     (slug: string) => dbCategories?.find((c) => c.slug === slug)?.id ?? "",
@@ -92,7 +74,28 @@ const Sell = () => {
     );
   }
 
-  const handleImagesChange = (newImages: File[], newPreviews: string[]) => { setImages(newImages); setPreviews(newPreviews); };
+  const handleImagesChange = (newImages: File[], newPreviews: string[]) => {
+    setImages(newImages);
+    setPreviews(newPreviews);
+
+    void (async () => {
+      for (const file of newImages) {
+        const key = fileQualityKey(file);
+        if (warnedLowQuality.current.has(key)) continue;
+        try {
+          const { isLowQuality } = await inspectImageQuality(file);
+          warnedLowQuality.current.add(key);
+          if (isLowQuality) {
+            toast.warning(
+              t("sell.imageLowQuality", "Kjo foto mund të duket e turbullt."),
+            );
+          }
+        } catch {
+          warnedLowQuality.current.add(key);
+        }
+      }
+    })();
+  };
 
   const handleGenerateWithAi = async () => {
     if (images.length === 0) {
@@ -151,12 +154,8 @@ const Sell = () => {
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
-          const compressed = await compressImage(file, 1920, 0.8);
-          const path = `${user.id}/${crypto.randomUUID()}.jpg`;
-          const { error: uploadError } = await supabase.storage.from("product-images").upload(path, compressed, { contentType: "image/jpeg" });
-          if (uploadError) throw uploadError;
-          const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-          imageUrls.push(urlData.publicUrl);
+          const { listingUrl } = await uploadProductImageSet(supabase, user.id, file);
+          imageUrls.push(listingUrl);
         } catch (imgErr: any) {
           console.error("Image upload failed:", imgErr);
           toast.error(t("sell.imageUploadFailed", "Ngarkimi i fotos dështoi: ") + (imgErr.message || ""));

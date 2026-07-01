@@ -296,7 +296,7 @@ const SearchResults = () => {
           </div>
         )}
         {!isLoading && query.length < 2 && !hasActiveFilters && (<div className="text-center py-20"><Search className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" /><p className="text-muted-foreground">{t("search.minChars")}</p></div>)}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{finalResults?.map((p, i) => (<ProductCard key={p.id} product={mapProduct(p)} index={i} />))}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{finalResults?.map((p, i) => (<ProductCard key={p.id} product={mapProduct(p)} index={i} imageSize="thumb" />))}</div>
       </div>
 
       {/* Back-to-top FAB */}

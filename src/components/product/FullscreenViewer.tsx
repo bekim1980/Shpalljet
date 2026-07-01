@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import SafeImage from "./SafeImage";
+import { resolveProductImageUrl } from "@/lib/productImage";
 
 interface FullscreenViewerProps {
   images: string[];
@@ -100,8 +101,10 @@ const FullscreenViewer = ({ images, startIndex, onClose }: FullscreenViewerProps
             className="max-w-full max-h-full flex items-center justify-center"
           >
             <SafeImage
-              src={images[idx]}
+              src={resolveProductImageUrl(images[idx], "large") ?? images[idx]}
               className="max-w-full max-h-full object-contain px-2"
+              responsive
+              sizesAttr="100vw"
             />
           </motion.div>
 
@@ -141,7 +144,13 @@ const FullscreenViewer = ({ images, startIndex, onClose }: FullscreenViewerProps
                     : "border-transparent opacity-50 hover:opacity-75"
                 }`}
               >
-                <img src={url} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={resolveProductImageUrl(url, "thumb") ?? url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
               </button>
             ))}
           </div>

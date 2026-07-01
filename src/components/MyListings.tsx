@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useMyListings, useDeleteListing, useUpdateListing } from "@/hooks/useMyListings";
 import BoostDialog from "@/components/product/BoostDialog";
 import { categoryLabels } from "@/hooks/useProducts";
+import { pickFirstValidImageUrl } from "@/lib/productImage";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -185,8 +186,14 @@ const MyListings = () => {
           return (
             <div key={product.id} className={`glass-card rounded-lg p-3 flex gap-3 items-center ${isExpired ? "opacity-70" : ""}`}>
               <div className="w-14 h-14 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
-                {product.image_urls?.[0] ? (
-                  <img src={product.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                {pickFirstValidImageUrl(product.image_urls, null, "card") ? (
+                  <img
+                    src={pickFirstValidImageUrl(product.image_urls, null, "card")!}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-[10px]">
                     {categoryLabels[product.category] || product.category}

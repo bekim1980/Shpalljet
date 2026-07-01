@@ -80,7 +80,7 @@ const TrendingSection = () => {
                       >
                         <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border/50 relative group-hover:scale-[1.02] transition-transform duration-300">
                           <ThumbImage
-                            src={pickFirstValidImageUrl(item.image_urls)}
+                            src={pickFirstValidImageUrl(item.image_urls, null, "thumb")}
                             alt={item.title}
                             className="w-full h-full object-cover"
                             loading="lazy"

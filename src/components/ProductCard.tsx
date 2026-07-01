@@ -35,7 +35,7 @@ interface ProductCardProduct {
   price_history?: unknown;
 }
 
-const ProductCard = ({ product, index }: { product: ProductCardProduct; index: number }) => {
+const ProductCard = ({ product, index, imageSize = "card" }: { product: ProductCardProduct; index: number; imageSize?: "thumb" | "card" }) => {
   const { user } = useAuth();
   const { data: wishlist } = useWishlist();
   const { mutate: toggleWishlist } = useToggleWishlist();
@@ -47,7 +47,7 @@ const ProductCard = ({ product, index }: { product: ProductCardProduct; index: n
   const isWished = wishlist?.has(product.id) ?? false;
   const productCurrency = (product.currency as CurrencyCode) || defaultCurrency;
 
-  const images = pickValidImageUrls(product.image_urls, product.image);
+  const images = pickValidImageUrls(product.image_urls, product.image, imageSize);
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
