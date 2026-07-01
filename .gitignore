@@ -25,3 +25,8 @@ dist-ssr
 
 .vercel
 .env*
+
+# Local tooling / reports (see PROJECT_SOURCE_OF_TRUTH.md)
+.tmp/
+lighthouse-pwa.json
+supabase/.temp/
