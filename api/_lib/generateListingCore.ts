@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { parseGeminiListingJson, type GeminiListingResult } from "../../src/lib/geminiListingSchema.js";
 
 const MODEL = "gemini-3-flash-preview";
@@ -127,7 +127,7 @@ export async function generateListingFromGemini(
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.4,
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: "HIGH" },
+        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
       },
     });
 
