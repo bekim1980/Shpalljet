@@ -1,3 +1,4 @@
+/// <reference path="./next-auth.d.ts" />
 import { createRequire } from "node:module";
 import type { NextAuthOptions } from "next-auth";
 
