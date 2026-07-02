@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { authOptions, ensureNextAuthUrl } from "../_lib/authOptions";
+import { authOptions, ensureNextAuthUrl } from "../_lib/authOptions.js";
 
 const require = createRequire(import.meta.url);
 
