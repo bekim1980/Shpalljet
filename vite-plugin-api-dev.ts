@@ -49,9 +49,8 @@ export function apiDevPlugin(): Plugin {
 
         if (url?.startsWith("/api/auth")) {
           try {
-            const NextAuth = (await import("next-auth")).default;
-            const { authOptions } = await import("../../api/_lib/authOptions.ts");
-            const handler = NextAuth(authOptions);
+            const { createNextAuthHandler } = await import("../../api/_lib/createNextAuthHandler.ts");
+            const handler = createNextAuthHandler();
             return handler(req as never, res as never);
           } catch (e) {
             console.error("[api-dev] nextauth:", e);
