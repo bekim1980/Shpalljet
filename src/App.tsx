@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SessionProvider } from "@/providers/SessionProvider";
 import { VerticalProvider } from "@/contexts/VerticalContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import VerticalThemeWrapper from "@/components/VerticalThemeWrapper";
@@ -20,6 +21,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 import Orders from "./pages/Orders.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback.tsx";
 import Install from "./pages/Install.tsx";
 import Analytics from "./pages/Analytics.tsx";
 import Insights from "./pages/Insights.tsx";
@@ -50,6 +52,7 @@ const AIChatWidgetGate = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <SessionProvider>
       <AuthProvider>
         <LocaleProvider>
           <VerticalProvider>
@@ -64,6 +67,7 @@ const App = () => (
                   <Route path="/browse" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/google-callback" element={<GoogleAuthCallback />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/p/:slug" element={<ProductDetail />} />
                   <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
@@ -88,6 +92,7 @@ const App = () => (
           </VerticalProvider>
         </LocaleProvider>
       </AuthProvider>
+      </SessionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

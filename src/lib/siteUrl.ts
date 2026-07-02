@@ -12,3 +12,8 @@ export function getSiteUrl(): string {
 export function getAuthCallbackUrl(): string {
   return `${getSiteUrl()}/auth/callback`;
 }
+
+/** Post–Auth.js Google bridge page (after /api/auth/callback/google). */
+export function getGoogleAuthCallbackUrl(): string {
+  return `${getSiteUrl()}/auth/google-callback`;
+}

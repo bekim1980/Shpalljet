@@ -9,6 +9,7 @@
 | `VITE_SITE_URL` | OAuth + email redirect base (e.g. `https://www.shpalljet.net`) |
 | `VITE_OAUTH_GOOGLE_ENABLED` | Set `true` after Google OAuth is configured in Supabase |
 | `VITE_OAUTH_APPLE_ENABLED` | Set `true` after Apple OAuth is configured in Supabase |
+| `VITE_GOOGLE_AUTH_MODE` | `supabase` (default, rollback) or `nextauth` for Auth.js Google on `/api/auth/callback/google` |
 | `VITE_SUPABASE_PROJECT_ID` | tooling (optional) |
 
 Do not commit `.env`. Use `.env.example` as a template.
@@ -20,11 +21,31 @@ Do not commit `.env`. Use `.env.example` as a template.
 | Site URL | `https://www.shpalljet.net` |
 | Redirect URLs | `https://www.shpalljet.net/**`, `https://shpalljet.net/**`, `http://localhost:5173/**`, `http://localhost:3000/**`, `http://localhost:8080/**` |
 
-OAuth uses native **Supabase Auth** (`signInWithOAuth`). There is no Better Auth, NextAuth, or `/~oauth` handler on Vercel.
+OAuth uses **Supabase Auth** for email/password and (by default) Google. Optional **Auth.js** Google mode (`VITE_GOOGLE_AUTH_MODE=nextauth`) adds `/api/auth/callback/google` while bridging to Supabase via `signInWithIdToken`.
 
 **Project ref (from `supabase/config.toml`):** `aybngrlutsfvapxtgqkg`
 
-### Google OAuth (Supabase + Google Cloud)
+### Google OAuth — Auth.js mode (Bazaar-style, optional)
+
+When `VITE_GOOGLE_AUTH_MODE=nextauth`:
+
+1. **Vercel server env** (never `VITE_`):
+   - `AUTH_SECRET` — `openssl rand -base64 32`
+   - `AUTH_URL` — `https://www.shpalljet.net`
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — same Web client as Supabase (or dedicated client with both redirect URIs)
+
+2. **Google Cloud** → Authorized redirect URIs (add, keep Supabase URI for rollback):
+   - `https://www.shpalljet.net/api/auth/callback/google`
+   - `https://xbignrigchholsrbnvhl.supabase.co/auth/v1/callback` (legacy)
+
+3. **Supabase** → URL Configuration → add redirect:
+   - `https://www.shpalljet.net/auth/google-callback`
+
+4. **Supabase Google provider** must stay **enabled** (bridge uses `signInWithIdToken`).
+
+5. **Rollback:** unset `VITE_GOOGLE_AUTH_MODE` or set `supabase`, redeploy.
+
+### Google OAuth — Supabase mode (default)
 
 1. **Supabase** → Authentication → Providers → Google:
    - Enable Google
@@ -33,8 +54,8 @@ OAuth uses native **Supabase Auth** (`signInWithOAuth`). There is no Better Auth
 
 2. **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client:
    - Authorized JavaScript origins: `https://www.shpalljet.net`, `https://shpalljet.net`
-   - Authorized redirect URI (Supabase only, not your app):
-     `https://aybngrlutsfvapxtgqkg.supabase.co/auth/v1/callback`
+   - Authorized redirect URI (Supabase callback):
+     `https://xbignrigchholsrbnvhl.supabase.co/auth/v1/callback`
 
 3. **Vercel** → set `VITE_OAUTH_GOOGLE_ENABLED=true` and redeploy.
 
@@ -47,7 +68,7 @@ Set `VITE_OAUTH_APPLE_ENABLED=true` only after all fields are saved.
 
 **Error `400 Unsupported provider: missing OAuth secret`** means the provider toggle is on in Supabase but **Client Secret** (Google) or **Private Key** (Apple) is empty or not saved.
 
-**Not required for this project:** `NEXT_PUBLIC_*`, `AUTH_URL`, `AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXTAUTH_URL`.
+**Not required for Supabase-only mode:** `AUTH_URL`, `AUTH_SECRET`, `GOOGLE_CLIENT_ID` on Vercel (those are for Auth.js server routes).
 
 ## Edge function secrets (Supabase Dashboard)
 

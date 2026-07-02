@@ -18,7 +18,7 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
   });
 }
 
-/** Dev-only: serve /api/ai/generate-listing via Vite (GEMINI_API_KEY in .env). */
+/** Dev-only: serve /api/ai/generate-listing and /api/auth/* (NextAuth) via Vite. */
 export function apiDevPlugin(): Plugin {
   return {
     name: "shpalljet-api-dev",
@@ -27,9 +27,40 @@ export function apiDevPlugin(): Plugin {
       if (env.GEMINI_API_KEY) {
         process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
       }
+      for (const key of [
+        "AUTH_SECRET",
+        "NEXTAUTH_SECRET",
+        "AUTH_URL",
+        "NEXTAUTH_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+      ] as const) {
+        if (env[key]) process.env[key] = env[key];
+      }
+      if (!process.env.NEXTAUTH_URL && !process.env.AUTH_URL) {
+        const port = server.config.server.port ?? 8080;
+        process.env.NEXTAUTH_URL = `http://localhost:${port}`;
+      } else if (!process.env.NEXTAUTH_URL && env.AUTH_URL) {
+        process.env.NEXTAUTH_URL = env.AUTH_URL;
+      }
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split("?")[0];
+
+        if (url?.startsWith("/api/auth")) {
+          try {
+            const NextAuth = (await import("next-auth")).default;
+            const { authOptions } = await import("../../api/_lib/authOptions.ts");
+            const handler = NextAuth(authOptions);
+            return handler(req as never, res as never);
+          } catch (e) {
+            console.error("[api-dev] nextauth:", e);
+            res.statusCode = 500;
+            res.end("Auth handler error");
+            return;
+          }
+        }
+
         if (url !== "/api/ai/generate-listing") return next();
 
         const send = (status: number, body: unknown) => {

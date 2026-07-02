@@ -1,6 +1,8 @@
 import { supabase } from "./supabase/client";
 import { isOAuthProviderEnabled } from "@/config/authProviders";
+import { isNextAuthGoogleMode } from "@/config/googleAuthMode";
 import { getAuthCallbackUrl } from "@/lib/siteUrl";
+import { signInWithGoogleNextAuth } from "./nextAuthGoogle";
 
 type SignInOptions = {
   redirect_uri?: string;
@@ -23,6 +25,10 @@ export const oauthAuth = {
           `${provider === "google" ? "Google" : "Apple"} sign-in is not enabled yet.`,
         ),
       };
+    }
+
+    if (provider === "google" && isNextAuthGoogleMode()) {
+      return signInWithGoogleNextAuth();
     }
 
     const redirectTo = opts?.redirect_uri ?? getAuthCallbackUrl();

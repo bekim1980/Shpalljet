@@ -13,7 +13,7 @@ export function setAuthReturnTo(path: string) {
   }
 }
 
-function readAuthReturnTo(): string {
+export function readAuthReturnTo(): string {
   try {
     const stored = sessionStorage.getItem(RETURN_KEY);
     sessionStorage.removeItem(RETURN_KEY);
