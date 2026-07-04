@@ -56,7 +56,7 @@ function jsonLoginFallback(res: VercelResponse, reason: string) {
   res.end(JSON.stringify({ url: `/login?authError=${encodeURIComponent(reason)}`, error: reason }));
 }
 
-function getMissingAuthConfig() {
+function getFatalAuthConfig() {
   const missing: string[] = [];
   if (!(process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET)) {
     missing.push("AUTH_SECRET or NEXTAUTH_SECRET");
@@ -67,6 +67,11 @@ function getMissingAuthConfig() {
   if (!process.env.GOOGLE_CLIENT_SECRET) {
     missing.push("GOOGLE_CLIENT_SECRET");
   }
+  return missing;
+}
+
+function getAuthConfigWarnings() {
+  const missing: string[] = [];
   if (!(process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL)) {
     missing.push("AUTH_URL, NEXTAUTH_URL, or VERCEL_URL");
   }
@@ -98,7 +103,8 @@ export function createNextAuthHandler() {
     const action = segments[0];
     const providerId = segments[1];
     const isBrowserNavigationMethod = req.method === "GET" || req.method === "HEAD";
-    const missingConfig = getMissingAuthConfig();
+    const missingConfig = getFatalAuthConfig();
+    const configWarnings = getAuthConfigWarnings();
     const callbackUrl = getQueryStringValue(req.query.callbackUrl);
     const explicitNext = getQueryStringValue(req.query.next);
     const nextParam = getNextParam(callbackUrl, explicitNext);
@@ -114,6 +120,17 @@ export function createNextAuthHandler() {
         error: authError,
         host: req.headers.host,
         url: req.url,
+      });
+    }
+
+    if (configWarnings.length > 0) {
+      console.warn("[auth] Missing recommended auth configuration", {
+        action,
+        providerId,
+        method: req.method,
+        host: req.headers.host,
+        url: req.url,
+        configWarnings,
       });
     }
 
