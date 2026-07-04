@@ -27,7 +27,9 @@ export function normalizeNextAuthQuery(req: VercelRequest): void {
 function getNextAuthSegments(req: VercelRequest): string[] {
   const existing = req.query.nextauth;
   if (Array.isArray(existing)) return existing.filter(Boolean).map(String);
-  if (typeof existing === "string" && existing) return [existing];
+  if (typeof existing === "string" && existing) {
+    return existing.split("/").filter(Boolean).map(String);
+  }
 
   const pathname = (req.url ?? "").split("?")[0];
   const match = pathname.match(/\/api\/auth\/?(.*)$/);
