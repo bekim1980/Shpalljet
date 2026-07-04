@@ -58,18 +58,19 @@ export function createNextAuthHandler() {
     const segments = getNextAuthSegments(req);
     const action = segments[0];
     const providerId = segments[1];
+    const isBrowserNavigationMethod = req.method === "GET" || req.method === "HEAD";
 
     // Raw browser GETs to provider-specific sign-in URLs are not the supported NextAuth
     // v4 entrypoint here; they can 404 on Vercel. Keep users on the polished install page.
-    if (req.method === "GET" && action === "signin" && providerId) {
+    if (isBrowserNavigationMethod && action === "signin" && providerId) {
       return redirectToInstall(res);
     }
 
-    if (req.method === "GET" && (action === "signin" || action === "signout" || action === "error")) {
+    if (isBrowserNavigationMethod && (action === "signin" || action === "signout" || action === "error")) {
       return redirectToInstall(res);
     }
 
-    if (req.method === "GET" && action && !["providers", "session", "csrf", "callback", "verify-request"].includes(action)) {
+    if (isBrowserNavigationMethod && action && !["providers", "session", "csrf", "callback", "verify-request"].includes(action)) {
       return redirectToInstall(res);
     }
 
