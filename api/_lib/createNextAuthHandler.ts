@@ -13,7 +13,14 @@ const NextAuth = require("next-auth").default as typeof import("next-auth").defa
  */
 export function normalizeNextAuthQuery(req: VercelRequest): void {
   const existing = req.query.nextauth;
-  if (existing !== undefined && existing !== null && existing !== "") return;
+  if (Array.isArray(existing)) {
+    req.query.nextauth = existing.filter(Boolean).map(String);
+    return;
+  }
+  if (typeof existing === "string" && existing) {
+    req.query.nextauth = existing.split("/").filter(Boolean);
+    return;
+  }
 
   const pathname = (req.url ?? "").split("?")[0];
   const match = pathname.match(/\/api\/auth\/?(.*)$/);
