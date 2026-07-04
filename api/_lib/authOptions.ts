@@ -46,6 +46,9 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // Do not set pages.signIn/pages.error to SPA routes (/login). That makes signIn()
-  // POST responses redirect to HTML, which breaks next-auth/react's res.json() parse.
+  pages: {
+    error: "/install",
+    signIn: "/install",
+    signOut: "/install",
+  },
 };
