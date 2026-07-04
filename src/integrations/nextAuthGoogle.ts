@@ -11,7 +11,7 @@ type NextAuthGoogleResult = {
  *
  * NextAuth v4 expects OAuth start on POST /api/auth/signin/:provider via
  * next-auth/react's signIn(). If that request fails or auth is unavailable,
- * send the user to /install instead of exposing raw auth errors or 404s.
+ * return the user to the app login UI instead of the PWA install page.
  */
 export async function signInWithGoogleNextAuth(): Promise<NextAuthGoogleResult> {
   try {
@@ -21,13 +21,13 @@ export async function signInWithGoogleNextAuth(): Promise<NextAuthGoogleResult> 
     });
 
     if (result?.error) {
-      window.location.assign("/install");
+      window.location.assign("/login?authError=google_start_failed");
       return { redirected: true };
     }
 
     return { redirected: true };
   } catch (err) {
-    window.location.assign("/install");
+    window.location.assign("/login?authError=google_start_failed");
     const message = err instanceof Error ? err.message : "Could not start Google sign-in.";
     return { error: new Error(message) };
   }

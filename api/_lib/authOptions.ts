@@ -45,10 +45,26 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      let finalTarget = baseUrl;
+
+      if (url.startsWith("/")) {
+        finalTarget = `${baseUrl}${url}`;
+      } else {
+        try {
+          finalTarget = new URL(url).origin === baseUrl ? url : baseUrl;
+        } catch {
+          finalTarget = baseUrl;
+        }
+      }
+
+      console.info("[auth] redirect", { url, baseUrl, finalTarget });
+      return finalTarget;
+    },
   },
   pages: {
-    error: "/install",
-    signIn: "/install",
-    signOut: "/install",
+    error: "/login",
+    signIn: "/login",
+    signOut: "/login",
   },
 };
