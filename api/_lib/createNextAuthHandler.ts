@@ -36,23 +36,10 @@ function getNextAuthSegments(req: VercelRequest): string[] {
   return match?.[1]?.split("/").filter(Boolean) ?? [];
 }
 
-function isAuthConfigured(): boolean {
-  const hasSecret = Boolean(process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET);
-  const hasGoogle = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-  const hasUrl = Boolean(process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL);
-  return hasSecret && hasGoogle && hasUrl;
-}
-
 function redirectToInstall(res: VercelResponse, statusCode = 307) {
   res.statusCode = statusCode;
   res.setHeader("Location", "/install");
   res.end();
-}
-
-function respondInstallJson(res: VercelResponse) {
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "application/json");
-  res.end(JSON.stringify({ url: "/install" }));
 }
 
 export function createNextAuthHandler() {
@@ -64,13 +51,6 @@ export function createNextAuthHandler() {
     const segments = getNextAuthSegments(req);
     const action = segments[0];
     const providerId = segments[1];
-
-    if (!isAuthConfigured()) {
-      if (req.method === "POST") {
-        return respondInstallJson(res);
-      }
-      return redirectToInstall(res);
-    }
 
     // Raw browser GETs to provider-specific sign-in URLs are not the supported NextAuth
     // v4 entrypoint here; they can 404 on Vercel. Keep users on the polished install page.
