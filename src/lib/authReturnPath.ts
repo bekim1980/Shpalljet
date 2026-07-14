@@ -23,5 +23,9 @@ export function resolveAuthReturnTo(
     }
   }
 
+  if (location.pathname === "/login") {
+    return "/";
+  }
+
   return buildCurrentPath(location);
 }

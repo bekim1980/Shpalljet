@@ -32,6 +32,7 @@ const Login = () => {
     const params = new URLSearchParams(location.search);
     const authError = params.get("authError");
     if (authError) {
+      console.warn("[oauth] login authError", { authError });
       toast.error(authError.replace(/_/g, " "));
     }
   }, [location.search]);

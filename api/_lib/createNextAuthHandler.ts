@@ -202,34 +202,28 @@ export function createNextAuthHandler() {
       }
     }
 
-    // Raw browser GETs to provider-specific sign-in URLs are not the supported NextAuth
-    // v4 entrypoint here; send users to the app login page instead of a dead-end route.
-    if (isBrowserNavigationMethod && action === "signin" && providerId) {
-      console.warn("[auth] redirect fallback", {
-        reason: "provider_get_not_supported",
-        finalRedirectTarget: "/login",
-        action,
-        providerId,
-        callbackUrl,
-        next: nextParam,
+    // Raw browser GETs to /api/auth/signin/:provider are the mobile-safe OAuth entry
+    // (see nextAuthGoogle.ts). Let NextAuth handle signin, signout, and error routes
+    // so custom pages.signIn/error (/login) apply instead of authError fallbacks.
+
+    if (isBrowserNavigationMethod && action === "signin" && !providerId) {
+      const qs = new URLSearchParams();
+      if (callbackUrl) qs.set("callbackUrl", callbackUrl);
+      if (explicitNext) qs.set("next", explicitNext);
+      if (authError) qs.set("error", authError);
+      const loginTarget = qs.toString() ? `/login?${qs}` : "/login";
+      console.info("[auth] signin page redirect", {
+        reason: "signin_without_provider",
+        hasCallbackUrl: !!callbackUrl,
+        hasNext: !!nextParam,
       });
-      return redirectToLogin(res, "provider_get_not_supported");
+      res.statusCode = 307;
+      res.setHeader("Location", loginTarget);
+      res.end();
+      return;
     }
 
-    if (isBrowserNavigationMethod && (action === "signin" || action === "signout" || action === "error")) {
-      console.warn("[auth] redirect fallback", {
-        reason: "browser_auth_page_redirect",
-        finalRedirectTarget: "/login",
-        action,
-        providerId,
-        callbackUrl,
-        next: nextParam,
-        error: authError,
-      });
-      return redirectToLogin(res, "browser_auth_page_redirect");
-    }
-
-    if (isBrowserNavigationMethod && action && !["providers", "session", "csrf", "callback", "verify-request"].includes(action)) {
+    if (isBrowserNavigationMethod && action && !["providers", "session", "csrf", "callback", "verify-request", "signin", "signout", "error"].includes(action)) {
       console.warn("[auth] redirect fallback", {
         reason: "unsupported_auth_route",
         finalRedirectTarget: "/login",

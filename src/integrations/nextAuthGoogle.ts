@@ -8,26 +8,22 @@ type NextAuthGoogleResult = {
 /**
  * Start Google OAuth via Auth.js.
  *
- * NextAuth v4 expects OAuth start on POST /api/auth/signin/:provider via
- * next-auth/react's signIn(). If that request fails or auth is unavailable,
- * return the user to the app login UI instead of the PWA install page.
+ * Use a full-page GET to /api/auth/signin/google. next-auth/react signIn() POSTs with
+ * json:true — on Android WebView/TWA that can fail or fall back to GET /api/auth/signin,
+ * which our API wrapper previously redirected as "browser auth page redirect".
  */
 export async function signInWithGoogleNextAuth(): Promise<NextAuthGoogleResult> {
-  const { signIn } = await import("next-auth/react");
-
   try {
-    const result = await signIn("google", {
-      callbackUrl: getGoogleAuthCallbackUrl(),
-      redirect: true,
-    });
+    const callbackUrl = getGoogleAuthCallbackUrl();
+    const params = new URLSearchParams({ callbackUrl });
+    const target = `/api/auth/signin/google?${params}`;
 
-    if (result?.error) {
-      window.location.assign("/login?authError=google_start_failed");
-      return { redirected: true };
-    }
+    console.info("[oauth] google start", { transport: "GET" });
 
+    window.location.assign(target);
     return { redirected: true };
   } catch (err) {
+    console.warn("[oauth] google start failed", err instanceof Error ? err.message : "unknown");
     window.location.assign("/login?authError=google_start_failed");
     const message = err instanceof Error ? err.message : "Could not start Google sign-in.";
     return { error: new Error(message) };
