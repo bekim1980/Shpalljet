@@ -30,7 +30,7 @@ const Login = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const authError = params.get("authError");
+    const authError = params.get("authError") ?? params.get("error");
     if (authError) {
       console.warn("[oauth] login authError", { authError });
       toast.error(authError.replace(/_/g, " "));
