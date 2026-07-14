@@ -49,6 +49,7 @@ export function useAuthFormActions({
     setSocialLoading("google");
     try {
       setAuthReturnTo(returnTo);
+      console.info("[oauth] google sign-in started", { variant });
       const result = await oauthAuth.signInWithOAuth("google");
       if (result.redirected) {
         markReturning();

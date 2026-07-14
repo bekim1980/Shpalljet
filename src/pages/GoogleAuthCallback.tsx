@@ -26,6 +26,7 @@ const GoogleAuthCallback = () => {
       const idToken = session?.googleIdToken;
 
       if (!idToken) {
+        console.warn("[oauth] google callback incomplete", { hasSession: !!session });
         setError("Google sign-in could not complete. Please try again or use email.");
         return;
       }
@@ -36,11 +37,16 @@ const GoogleAuthCallback = () => {
       });
 
       if (supabaseError) {
+        console.warn("[oauth] google callback supabase failed");
         setError(supabaseError.message);
         return;
       }
 
       await signOut({ redirect: false });
+      const destination = readAuthReturnTo();
+      console.info("[oauth] google callback complete", {
+        destination: destination.split("?")[0],
+      });
       finish(true);
     };
 
