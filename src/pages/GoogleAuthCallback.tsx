@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSession, signOut } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { readAuthReturnTo } from "@/pages/AuthCallback";
@@ -22,6 +21,7 @@ const GoogleAuthCallback = () => {
     };
 
     const bridge = async () => {
+      const { getSession, signOut } = await import("next-auth/react");
       const session = await getSession();
       const idToken = session?.googleIdToken;
 

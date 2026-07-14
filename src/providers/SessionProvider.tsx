@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
-import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
+import { Suspense, lazy } from "react";
 import { isNextAuthGoogleMode } from "@/config/googleAuthMode";
+
+const NextAuthSessionBridge = lazy(() =>
+  import("./NextAuthSessionBridge").then((m) => ({ default: m.NextAuthSessionBridge })),
+);
 
 type Props = {
   children: ReactNode;
@@ -15,8 +19,8 @@ export function SessionProvider({ children }: Props) {
   }
 
   return (
-    <NextAuthSessionProvider basePath="/api/auth" refetchOnWindowFocus={false}>
-      {children}
-    </NextAuthSessionProvider>
+    <Suspense fallback={<>{children}</>}>
+      <NextAuthSessionBridge>{children}</NextAuthSessionBridge>
+    </Suspense>
   );
 }

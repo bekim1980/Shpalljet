@@ -1,4 +1,3 @@
-import { signIn } from "next-auth/react";
 import { getGoogleAuthCallbackUrl } from "@/lib/siteUrl";
 
 type NextAuthGoogleResult = {
@@ -14,6 +13,8 @@ type NextAuthGoogleResult = {
  * return the user to the app login UI instead of the PWA install page.
  */
 export async function signInWithGoogleNextAuth(): Promise<NextAuthGoogleResult> {
+  const { signIn } = await import("next-auth/react");
+
   try {
     const result = await signIn("google", {
       callbackUrl: getGoogleAuthCallbackUrl(),
