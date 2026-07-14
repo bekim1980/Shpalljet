@@ -32,6 +32,7 @@ import RideDetail from "./pages/RideDetail.tsx";
 import MyRides from "./pages/MyRides.tsx";
 import AIChatWidget from "@/components/ai/AIChatWidget";
 import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
+import { AuthShellProvider } from "@/contexts/AuthShellProvider";
 import { ENABLE_AI_ASSISTANT } from "@/config/features";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <AuthShellProvider>
               <VerticalThemeWrapper>
                 <InstallBanner />
                 <Routes>
@@ -88,6 +90,7 @@ const App = () => (
                 </Routes>
                 <AIChatWidgetGate />
               </VerticalThemeWrapper>
+              </AuthShellProvider>
             </BrowserRouter>
           </VerticalProvider>
         </LocaleProvider>

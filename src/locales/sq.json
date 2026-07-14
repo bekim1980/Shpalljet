@@ -366,7 +366,7 @@
     "continueApple": "Vazhdo me Apple",
     "accountCreated": "Llogaria u krijua! Kontrollo email-in për ta konfirmuar.",
     "haveAccount": "Keni tashmë llogari? Hyni",
-    "noAccount": "Nuk keni llogari? Regjistrohuni",
+    "noAccount": "Nuk keni llogari?",
     "welcomeNew": "Mirë se erdhe në Shpalljet",
     "welcomeReturning": "Mirë se u ktheve",
     "valueProp": "Bli, shis dhe gjej çdo gjë në një vend",
@@ -375,6 +375,21 @@
     "ctaContinue": "Vazhdo",
     "activitySignal": "Shpallje të reja çdo ditë",
     "trustSignals": "E sigurt • E shpejtë • Pa spam"
+  },
+  "auth": {
+    "forgotPassword": "Keni harruar fjalëkalimin?",
+    "forgotPasswordTitle": "Rivendos fjalëkalimin",
+    "forgotPasswordHint": "Shkruani email-in dhe do t'ju dërgojmë një lidhje rivendosjeje.",
+    "sendResetLink": "Dërgo lidhjen",
+    "resetEmailSent": "Kontrolloni email-in për lidhjen e rivendosjes.",
+    "backToLogin": "Kthehu te hyrja",
+    "verifyEmailTitle": "Kontrolloni email-in",
+    "verifyEmailBody": "Dërguam një lidhje konfirmimi te {{email}}.",
+    "verifyEmailBodyGeneric": "Ju dërguam një email me hapat e ardhshëm.",
+    "successTitle": "Jeni futur",
+    "successBody": "Mirë se u kthyet në Shpalljet.",
+    "continueBrowsing": "Vazhdo shfletimin",
+    "continueFacebook": "Vazhdo me Facebook"
   },
   "search": {
     "title": "Kërkim",

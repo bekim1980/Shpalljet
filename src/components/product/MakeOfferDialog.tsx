@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { captureAuthShellContext, useRequireAuthShell } from "@/hooks/useRequireAuthShell";
 import { useTranslation } from "react-i18next";
 import { HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,15 +38,15 @@ const MakeOfferDialog = ({
 }: MakeOfferDialogProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { requireAuth } = useRequireAuthShell();
   const navigate = useNavigate();
   const { startConversation } = useStartConversation();
   const [open, setOpen] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!user) {
-      navigate("/login", { state: { from: `/product/${productId}` } });
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!requireAuth(() => {}, { onBeforeAuth: () => setOpen(false), ...captureAuthShellContext(e) })) {
       return;
     }
     if (!sellerId) {
@@ -148,7 +149,7 @@ const MakeOfferDialog = ({
           <Button
             variant="gold"
             className="w-full"
-            onClick={handleSubmit}
+            onClick={(e) => void handleSubmit(e)}
             disabled={sending || !offerPrice}
           >
             {sending ? t("common.loading") : t("product.sendOffer")}

@@ -13,6 +13,7 @@ import { useProduct } from "@/hooks/useProducts";
 import { useSellerRating } from "@/hooks/useReviews";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthShellTriggerCapture, useRequireAuthShell } from "@/hooks/useRequireAuthShell";
 import { useVertical, type Vertical } from "@/contexts/VerticalContext";
 import { useStartConversation } from "@/hooks/useChat";
 import { getMutationErrorMessage } from "@/lib/accountRestriction";
@@ -93,6 +94,8 @@ const ProductDetail = () => {
   const id = extractProductId(rawParam);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { requireAuth } = useRequireAuthShell();
+  const authCapture = useAuthShellTriggerCapture();
   const { t } = useTranslation();
   const { setVertical } = useVertical();
 
@@ -164,8 +167,12 @@ const ProductDetail = () => {
   const isWished = product ? (wishlist?.has(product.id) ?? false) : false;
 
   const handleWishlist = () => {
-    if (!user) { navigate("/login"); return; }
-    if (product) toggleWishlist({ productId: product.id, isWished });
+    requireAuth(
+      () => {
+        if (product) toggleWishlist({ productId: product.id, isWished });
+      },
+      authCapture.pointerOptions(),
+    );
   };
 
   if (id && isLoading) return <ProductDetailSkeleton />;
@@ -188,7 +195,7 @@ const ProductDetail = () => {
   }
 
   const handleMessage = async (prefill?: string) => {
-    if (!user) { toast.error(t("product.loginToMessage")); navigate("/login"); return; }
+    if (!requireAuth(() => {}, authCapture.pointerOptions())) return;
     if (!product.seller.id) { toast.info(t("product.demoProduct")); return; }
     if (user.id === product.seller.id) { toast.info(t("product.ownListing")); return; }
     try {
@@ -224,12 +231,12 @@ const ProductDetail = () => {
   };
 
   const handleContact = () => {
-    if (!user) { navigate("/login", { state: { from: `/product/${product.id}` } }); return; }
+    if (!requireAuth(() => {}, authCapture.pointerOptions())) return;
     if (product.seller.phone) { setShowPhone(true); } else { toast.info(t("product.noPhone")); handleMessage(); }
   };
 
   const handleWhatsApp = () => {
-    if (!user) { navigate("/login", { state: { from: `/product/${product.id}` } }); return; }
+    if (!requireAuth(() => {}, authCapture.pointerOptions())) return;
     if (!product.seller.phone) { toast.info(t("product.noPhone")); return; }
     const num = formatPhoneNumber(product.seller.phone);
     const text = encodeURIComponent(t("product.interestedIn", { title: product.title }));
@@ -237,7 +244,7 @@ const ProductDetail = () => {
   };
 
   const handleViber = () => {
-    if (!user) { navigate("/login", { state: { from: `/product/${product.id}` } }); return; }
+    if (!requireAuth(() => {}, authCapture.pointerOptions())) return;
     if (!product.seller.phone) { toast.info(t("product.noPhone")); return; }
     const num = formatPhoneNumber(product.seller.phone);
     window.open(`viber://chat?number=%2B${num}`, "_blank", "noopener");
@@ -326,6 +333,7 @@ const ProductDetail = () => {
               onImageTap={(i) => setFullscreenIdx(i)}
               isWished={isWished}
               onWishlist={handleWishlist}
+              onWishlistPointerDown={authCapture.onPointerDown}
               condition={product.condition}
             />
           </div>
@@ -417,16 +425,16 @@ const ProductDetail = () => {
                       {product.applicationUrl ? <ExternalLink className="h-5 w-5 mr-2" /> : product.applicationEmail ? <Mail className="h-5 w-5 mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
                       {t("product.apply", "Apply now")}
                     </Button>
-                    <Button variant="gold-outline" size="lg" className="h-12 px-4" onClick={() => handleMessage()}>
+                    <Button variant="gold-outline" size="lg" className="h-12 px-4" onPointerDown={authCapture.onPointerDown} onClick={() => void handleMessage()}>
                       <MessageCircle className="h-4 w-4 mr-2" />{t("product.sendMessage", "Send message")}
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="gold" size="lg" className="flex-1 h-12" onClick={handleContact}>
+                    <Button variant="gold" size="lg" className="flex-1 h-12" onPointerDown={authCapture.onPointerDown} onClick={handleContact}>
                       <Phone className="h-4 w-4 mr-2" />{t("product.call", "Thirrje")}
                     </Button>
-                    <Button variant="gold-outline" size="lg" className="flex-1 h-12" onClick={() => handleMessage()}>
+                    <Button variant="gold-outline" size="lg" className="flex-1 h-12" onPointerDown={authCapture.onPointerDown} onClick={() => void handleMessage()}>
                       <MessageCircle className="h-4 w-4 mr-2" />{t("product.sendMessage", "Send message")}
                     </Button>
                   </>
@@ -439,7 +447,8 @@ const ProductDetail = () => {
                     <button
                       key={q}
                       type="button"
-                      onClick={() => handleMessage(q)}
+                      onPointerDown={authCapture.onPointerDown}
+                      onClick={() => void handleMessage(q)}
                       className="text-xs px-3 py-1.5 rounded-full border border-border/60 bg-secondary/40 text-foreground/80 hover:border-primary/50 hover:text-primary transition-colors"
                     >
                       {q}
@@ -460,12 +469,12 @@ const ProductDetail = () => {
               {(showWhatsApp || showViber) && (
                 <div className="flex gap-2">
                   {showWhatsApp && (
-                    <Button size="default" className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white border-0" onClick={handleWhatsApp}>
+                    <Button size="default" className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white border-0" onPointerDown={authCapture.onPointerDown} onClick={handleWhatsApp}>
                       <WhatsAppIcon className="h-4 w-4 mr-1.5" />WhatsApp
                     </Button>
                   )}
                   {showViber && (
-                    <Button size="default" className="flex-1 bg-[#7360F2] hover:bg-[#5a48d4] text-white border-0" onClick={handleViber}>
+                    <Button size="default" className="flex-1 bg-[#7360F2] hover:bg-[#5a48d4] text-white border-0" onPointerDown={authCapture.onPointerDown} onClick={handleViber}>
                       <ViberIcon className="h-4 w-4 mr-1.5" />Viber
                     </Button>
                   )}
@@ -652,16 +661,16 @@ const ProductDetail = () => {
                 {product.applicationUrl ? <ExternalLink className="h-5 w-5 mr-2" /> : product.applicationEmail ? <Mail className="h-5 w-5 mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
                 {t("product.apply", "Apply now")}
               </Button>
-              <Button variant="gold-outline" size="lg" className="h-14 px-3" onClick={() => handleMessage()} aria-label={t("product.sendMessage", "Send message")}>
+              <Button variant="gold-outline" size="lg" className="h-14 px-3" onPointerDown={authCapture.onPointerDown} onClick={() => void handleMessage()} aria-label={t("product.sendMessage", "Send message")}>
                 <MessageCircle className="h-5 w-5" />
               </Button>
             </>
           ) : (
             <>
-              <Button variant="gold" size="lg" className="flex-1 h-12" onClick={handleContact}>
+              <Button variant="gold" size="lg" className="flex-1 h-12" onPointerDown={authCapture.onPointerDown} onClick={handleContact}>
                 <Phone className="h-4 w-4 mr-1.5" />{t("product.call", "Thirrje")}
               </Button>
-              <Button variant="gold-outline" size="lg" className="flex-1 h-12" onClick={() => handleMessage()}>
+              <Button variant="gold-outline" size="lg" className="flex-1 h-12" onPointerDown={authCapture.onPointerDown} onClick={() => void handleMessage()}>
                 <MessageCircle className="h-4 w-4 mr-1.5" />{t("product.sendMessage", "Send message")}
               </Button>
             </>
@@ -697,12 +706,12 @@ const ProductDetail = () => {
               </a>
             </div>
             {showWhatsApp && (
-              <button onClick={handleWhatsApp} className="p-2 rounded-full bg-[#25D366] text-white">
+              <button onPointerDown={authCapture.onPointerDown} onClick={handleWhatsApp} className="p-2 rounded-full bg-[#25D366] text-white">
                 <WhatsAppIcon className="h-4 w-4" />
               </button>
             )}
             {showViber && (
-              <button onClick={handleViber} className="p-2 rounded-full bg-[#7360F2] text-white">
+              <button onPointerDown={authCapture.onPointerDown} onClick={handleViber} className="p-2 rounded-full bg-[#7360F2] text-white">
                 <ViberIcon className="h-4 w-4" />
               </button>
             )}

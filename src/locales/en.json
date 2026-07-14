@@ -367,7 +367,7 @@
     "continueApple": "Continue with Apple",
     "accountCreated": "Account created! Check your email to confirm.",
     "haveAccount": "Already have an account? Sign in",
-    "noAccount": "Don't have an account? Sign up",
+    "noAccount": "Don't have an account?",
     "welcomeNew": "Welcome to Shpalljet",
     "welcomeReturning": "Welcome back",
     "valueProp": "Buy, sell and find anything in one place",
@@ -376,6 +376,21 @@
     "ctaContinue": "Continue",
     "activitySignal": "New listings every day",
     "trustSignals": "Secure • Fast • No spam"
+  },
+  "auth": {
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordHint": "Enter your email and we'll send you a reset link.",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "Check your email for the reset link.",
+    "backToLogin": "Back to sign in",
+    "verifyEmailTitle": "Check your email",
+    "verifyEmailBody": "We sent a confirmation link to {{email}}.",
+    "verifyEmailBodyGeneric": "We sent you an email with next steps.",
+    "successTitle": "You're signed in",
+    "successBody": "Welcome back to Shpalljet.",
+    "continueBrowsing": "Continue browsing",
+    "continueFacebook": "Continue with Facebook"
   },
   "search": {
     "title": "Search",
