@@ -52,6 +52,11 @@ const SocialAuthButtons = ({
   const { t } = useTranslation();
   const disabled = formLoading || !!socialLoading;
 
+  const handleGoogleClick = () => {
+    console.info("[oauth] google button clicked");
+    onGoogleSignIn();
+  };
+
   if (!hasVisibleSocialProviders() && !isOAuthProviderEnabled("apple")) return null;
 
   return (
@@ -64,7 +69,7 @@ const SocialAuthButtons = ({
             socialBase,
             "border-white/15 bg-white text-[#1f1f1f] hover:bg-white/95 hover:border-white/30 shadow-sm",
           )}
-          onClick={onGoogleSignIn}
+          onClick={handleGoogleClick}
           disabled={disabled}
           aria-busy={socialLoading === "google" || undefined}
         >

@@ -47,11 +47,13 @@ export function useAuthFormActions({
 
   const handleGoogleSignIn = useCallback(async () => {
     setSocialLoading("google");
+    let navigatedAway = false;
     try {
       setAuthReturnTo(returnTo);
-      console.info("[oauth] google sign-in started", { variant });
+      console.info("[oauth] auth action invoked", { variant });
       const result = await oauthAuth.signInWithOAuth("google");
       if (result.redirected) {
+        navigatedAway = true;
         markReturning();
         return;
       }
@@ -69,7 +71,9 @@ export function useAuthFormActions({
       const message = err instanceof Error ? err.message : "Error";
       toast.error(message);
     } finally {
-      setSocialLoading(null);
+      if (!navigatedAway) {
+        setSocialLoading(null);
+      }
     }
   }, [returnTo, markReturning, onViewChange, finishSuccess, variant]);
 

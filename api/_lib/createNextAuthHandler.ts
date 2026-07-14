@@ -202,9 +202,8 @@ export function createNextAuthHandler() {
       }
     }
 
-    // Raw browser GETs to /api/auth/signin/:provider are the mobile-safe OAuth entry
-    // (see nextAuthGoogle.ts). Let NextAuth handle signin, signout, and error routes
-    // so custom pages.signIn/error (/login) apply instead of authError fallbacks.
+    // Browser GET /api/auth/signin/:provider is allowed through for diagnostics only.
+    // OAuth must start via POST (see nextAuthGoogle.ts form submit).
 
     if (isBrowserNavigationMethod && action === "signin" && !providerId) {
       const qs = new URLSearchParams();
