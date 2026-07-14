@@ -12,4 +12,4 @@ Disallow: /analytics
 Disallow: /insights
 Disallow: /my-rides
 
-Sitemap: https://shpalljet.net/sitemap.xml
+Sitemap: https://www.shpalljet.net/sitemap.xml

@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateReport } from "@/hooks/useReports";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { captureAuthShellContext, useRequireAuthShell } from "@/hooks/useRequireAuthShell";
 
 const REASONS = [
   { value: "fake", label: "Artikull i rremë" },
@@ -24,16 +23,14 @@ interface ReportDialogProps {
 }
 
 const ReportDialog = ({ reportedType, reportedId, triggerVariant = "icon" }: ReportDialogProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { requireAuth } = useRequireAuthShell();
   const { mutate: createReport, isPending } = useCreateReport();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleSubmit = () => {
-    if (!user) {
-      navigate("/login");
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!requireAuth(() => {}, { onBeforeAuth: () => setOpen(false), ...captureAuthShellContext(e) })) {
       return;
     }
     if (!reason) return;
@@ -86,7 +83,7 @@ const ReportDialog = ({ reportedType, reportedId, triggerVariant = "icon" }: Rep
               maxLength={1000}
             />
           </div>
-          <Button variant="gold" className="w-full" onClick={handleSubmit} disabled={!reason || isPending}>
+          <Button variant="gold" className="w-full" onClick={(e) => handleSubmit(e)} disabled={!reason || isPending}>
             {isPending ? "Duke dërguar..." : "Dërgo Raportin"}
           </Button>
         </div>

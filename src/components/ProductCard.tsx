@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { Star, Heart, MapPin, ChevronLeft, ChevronRight, MessageCircle, Sparkles, TrendingUp } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthShellTriggerCapture, useRequireAuthShell } from "@/hooks/useRequireAuthShell";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useLocale } from "@/contexts/LocaleContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
@@ -37,9 +38,10 @@ interface ProductCardProduct {
 
 const ProductCard = ({ product, index, imageSize = "card" }: { product: ProductCardProduct; index: number; imageSize?: "thumb" | "card" }) => {
   const { user } = useAuth();
+  const { requireAuth } = useRequireAuthShell();
+  const authCapture = useAuthShellTriggerCapture();
   const { data: wishlist } = useWishlist();
   const { mutate: toggleWishlist } = useToggleWishlist();
-  const navigate = useNavigate();
   const { currency: defaultCurrency } = useLocale();
   const [activeImg, setActiveImg] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -52,8 +54,10 @@ const ProductCard = ({ product, index, imageSize = "card" }: { product: ProductC
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) { navigate("/login"); return; }
-    toggleWishlist({ productId: product.id, isWished });
+    requireAuth(
+      () => toggleWishlist({ productId: product.id, isWished }),
+      authCapture.pointerOptions(),
+    );
   };
 
   const scrollTo = (idx: number, e: React.MouseEvent) => {
@@ -179,6 +183,7 @@ const ProductCard = ({ product, index, imageSize = "card" }: { product: ProductC
           )}
           <div className="absolute top-3 left-3 z-10">
             <button
+              onPointerDown={authCapture.onPointerDown}
               onClick={handleWishlist}
               aria-label={isWished ? "Remove from wishlist" : "Add to wishlist"}
               aria-pressed={isWished}

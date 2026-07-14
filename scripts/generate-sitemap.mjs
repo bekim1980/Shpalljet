@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "../public/sitemap.xml");
-const SITE = "https://shpalljet.net";
+const SITE = "https://www.shpalljet.net";
 
 const STATIC_ROUTES = [
   { loc: "/", changefreq: "daily", priority: "1.0" },
@@ -18,6 +18,8 @@ const STATIC_ROUTES = [
   { loc: "/rides", changefreq: "hourly", priority: "0.9" },
   { loc: "/pricing", changefreq: "monthly", priority: "0.6" },
   { loc: "/install", changefreq: "monthly", priority: "0.5" },
+  { loc: "/terms", changefreq: "yearly", priority: "0.4" },
+  { loc: "/privacy", changefreq: "yearly", priority: "0.4" },
 ];
 
 const VERTICALS = ["luxe", "market", "rent", "services", "jobs"];

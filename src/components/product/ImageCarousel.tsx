@@ -8,10 +8,11 @@ interface ImageCarouselProps {
   onImageTap: (index: number) => void;
   isWished: boolean;
   onWishlist: () => void;
+  onWishlistPointerDown?: (e: React.PointerEvent<HTMLElement>) => void;
   condition: string;
 }
 
-const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, condition }: ImageCarouselProps) => {
+const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPointerDown, condition }: ImageCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -37,7 +38,11 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, condition }: 
           </div>
           <span className="text-muted-foreground/40 text-sm">No images available</span>
         </div>
-        <button onClick={onWishlist} className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm">
+        <button
+          onPointerDown={onWishlistPointerDown}
+          onClick={() => onWishlist()}
+          className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm"
+        >
           <Heart className={`h-5 w-5 ${isWished ? "fill-primary text-primary" : "text-foreground/70"}`} />
         </button>
       </div>
@@ -106,7 +111,11 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, condition }: 
       )}
 
       {/* Overlays */}
-      <button onClick={onWishlist} className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm shadow-md">
+      <button
+        onPointerDown={onWishlistPointerDown}
+        onClick={() => onWishlist()}
+        className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm shadow-md"
+      >
         <Heart className={`h-5 w-5 transition-colors ${isWished ? "fill-primary text-primary" : "text-foreground/70"}`} />
       </button>
       <span className="absolute top-3 left-3 text-xs font-medium px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-foreground/80 capitalize shadow-sm">

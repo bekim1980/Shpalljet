@@ -98,6 +98,24 @@ vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: state.user, loading: false }),
 }));
 
+vi.mock("@/hooks/useRequireAuthShell", () => ({
+  useRequireAuthShell: () => ({
+    user: state.user,
+    requireAuth: (action: () => void) => {
+      if (state.user) {
+        action();
+        return true;
+      }
+      return false;
+    },
+  }),
+  useAuthShellTriggerCapture: () => ({
+    onPointerDown: vi.fn(),
+    pointerOptions: () => ({ scrollY: 0, trigger: null }),
+  }),
+  captureAuthShellContext: vi.fn(),
+}));
+
 // ----- Stub heavy children that aren't relevant -----
 vi.mock("@/components/Header", () => ({ default: () => null }));
 vi.mock("@/components/ai/AISearchBar", () => ({ default: () => null }));

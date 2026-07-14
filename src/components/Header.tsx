@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useRef } from "react";
 import { User, MessageCircle, ShoppingBag, LogOut, Plus, ShieldCheck, Package, BarChart3, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,9 +10,15 @@ import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
 import { REGIONS, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
+import { useAuthShell } from "@/contexts/AuthShellProvider";
+import { buildCurrentPath } from "@/lib/authReturnPath";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { openAuthShell } = useAuthShell();
+  const location = useLocation();
+  const loginScrollYRef = useRef(0);
+  const loginTriggerRef = useRef<HTMLButtonElement | null>(null);
   const { data: isAdmin } = useIsAdmin();
   const { unreadCount: messageUnreadCount } = useUnreadMessageCount();
   const { t, i18n } = useTranslation();
@@ -135,8 +142,22 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Button variant="gold-outline" size="sm" asChild>
-                <Link to="/login">{t("common.login")}</Link>
+              <Button
+                variant="gold-outline"
+                size="sm"
+                onPointerDown={(e) => {
+                  loginScrollYRef.current = window.scrollY;
+                  loginTriggerRef.current = e.currentTarget;
+                }}
+                onClick={() =>
+                  openAuthShell({
+                    returnTo: buildCurrentPath(location),
+                    scrollY: loginScrollYRef.current,
+                    trigger: loginTriggerRef.current,
+                  })
+                }
+              >
+                {t("common.login")}
               </Button>
               <Button variant="gold" size="icon" className="rounded-full w-9 h-9 shadow-md" asChild>
                 <Link to="/sell">
