@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { authCtaClass, authInputClass } from "@/components/auth/authStyles";
+import AuthInput from "@/components/auth/ui/AuthInput";
+import GoldButton from "@/components/auth/ui/GoldButton";
+import { authLinkClass, authViewTransitionClass } from "@/components/auth/authStyles";
+import { cn } from "@/lib/utils";
 
 type ForgotPasswordViewProps = {
   idPrefix: string;
@@ -32,12 +32,12 @@ const ForgotPasswordView = ({
   }, [autoFocus]);
 
   return (
-    <div className="space-y-5">
-      <div className="text-center space-y-1.5">
-        <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-white">
+    <div className={cn("space-y-5", authViewTransitionClass)}>
+      <div className="text-center space-y-2 px-1">
+        <h2 className="font-display text-2xl sm:text-[1.65rem] font-semibold tracking-tight text-white">
           {t("auth.forgotPasswordTitle")}
         </h2>
-        <p className="text-sm text-white/55">{t("auth.forgotPasswordHint")}</p>
+        <p className="text-sm text-white/55 leading-relaxed">{t("auth.forgotPasswordHint")}</p>
       </div>
 
       <form
@@ -47,44 +47,25 @@ const ForgotPasswordView = ({
           onSubmit(email);
         }}
       >
-        <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-forgot-email`} className="text-xs text-white/70">
-            {t("login.email")}
-          </Label>
-          <div className="relative group">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
-              ref={emailRef}
-              id={`${idPrefix}-forgot-email`}
-              type="email"
-              placeholder={t("login.emailPlaceholder")}
-              className={authInputClass}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-        </div>
+        <AuthInput
+          ref={emailRef}
+          id={`${idPrefix}-forgot-email`}
+          label={t("login.email")}
+          type="email"
+          placeholder={t("login.emailPlaceholder")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          icon={<Mail className="h-[18px] w-[18px]" aria-hidden />}
+        />
 
-        <Button type="submit" disabled={formLoading} className={authCtaClass}>
-          {formLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              {t("auth.sendResetLink")}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </>
-          )}
-        </Button>
+        <GoldButton type="submit" loading={formLoading}>
+          {t("auth.sendResetLink")}
+        </GoldButton>
       </form>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center justify-center gap-1.5 w-full text-sm text-white/55 hover:text-gold transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
+      <button type="button" onClick={onBack} className={cn("w-full text-center text-sm", authLinkClass)}>
         {t("auth.backToLogin")}
       </button>
     </div>

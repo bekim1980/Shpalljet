@@ -30,6 +30,8 @@ import Rides from "./pages/Rides.tsx";
 import RideNew from "./pages/RideNew.tsx";
 import RideDetail from "./pages/RideDetail.tsx";
 import MyRides from "./pages/MyRides.tsx";
+import Terms from "./pages/Terms.tsx";
+import Privacy from "./pages/Privacy.tsx";
 import AIChatWidget from "@/components/ai/AIChatWidget";
 import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
 import { AuthShellProvider } from "@/contexts/AuthShellProvider";
@@ -45,7 +47,9 @@ const AIChatWidgetGate = () => {
     pathname === "/my-rides" ||
     pathname === "/" ||
     pathname === "/index" ||
-    pathname === "/login";
+    pathname === "/login" ||
+    pathname === "/terms" ||
+    pathname === "/privacy";
   if (hide) return null;
   return <AIChatWidget />;
 };
@@ -82,6 +86,8 @@ const App = () => (
                   <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                   <Route path="/insights" element={<AdminRoute><Insights /></AdminRoute>} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
                   <Route path="/rides" element={<Rides />} />
                   <Route path="/rides/new" element={<ProtectedRoute><RideNew /></ProtectedRoute>} />
                   <Route path="/rides/:id" element={<RideDetail />} />

@@ -352,45 +352,72 @@
   },
   "login": {
     "brandName": "LUXE",
-    "createAccount": "Create Account",
+    "createAccount": "Create a new account",
     "welcomeBack": "Welcome Back",
-    "joinMarket": "Join the best marketplace",
+    "joinMarket": "Join the largest community\nin Albania and Kosovo.",
     "signInToAccount": "Sign in to your account",
-    "fullName": "Full Name",
+    "fullName": "Full name",
     "namePlaceholder": "Your name",
     "email": "Email",
+    "emailOrPhone": "Email or phone",
     "emailPlaceholder": "you@example.com",
     "password": "Password",
-    "loginButton": "Login",
+    "loginButton": "Sign in",
     "signUpButton": "Create Account",
+    "continueButton": "Continue",
     "continueGoogle": "Continue with Google",
     "continueApple": "Continue with Apple",
     "accountCreated": "Account created! Check your email to confirm.",
     "haveAccount": "Already have an account? Sign in",
+    "haveAccountShort": "Have an account?",
+    "loginHere": "Sign in here",
     "noAccount": "Don't have an account?",
-    "welcomeNew": "Welcome to Shpalljet",
+    "registerHere": "Register here",
+    "welcomeNew": "Welcome",
     "welcomeReturning": "Welcome back",
-    "valueProp": "Buy, sell and find anything in one place",
+    "valueProp": "Sign in to your account to continue\nyour Shpalljet experience.",
     "socialSubtext": "No manual signup • Sign in seconds",
     "orContinueEmail": "or continue with email",
+    "orDivider": "OR",
+    "rememberMe": "Keep me signed in",
     "ctaContinue": "Continue",
     "activitySignal": "New listings every day",
-    "trustSignals": "Secure • Fast • No spam"
+    "trustSignals": "Secure · Fast · No spam"
   },
   "auth": {
     "forgotPassword": "Forgot password?",
-    "forgotPasswordTitle": "Reset your password",
-    "forgotPasswordHint": "Enter your email and we'll send you a reset link.",
-    "sendResetLink": "Send reset link",
+    "forgotPasswordTitle": "Forgot your password?",
+    "forgotPasswordHint": "Enter your email or phone and we'll send reset instructions.",
+    "sendResetLink": "Send instructions",
     "resetEmailSent": "Check your email for the reset link.",
     "backToLogin": "Back to sign in",
+    "backToPreviousStep": "Go back",
     "verifyEmailTitle": "Check your email",
     "verifyEmailBody": "We sent a confirmation link to {{email}}.",
     "verifyEmailBodyGeneric": "We sent you an email with next steps.",
     "successTitle": "You're signed in",
     "successBody": "Welcome back to Shpalljet.",
     "continueBrowsing": "Continue browsing",
-    "continueFacebook": "Continue with Facebook"
+    "continueFacebook": "Continue with Facebook",
+    "registerStepAccount": "Account",
+    "registerStepDetails": "Details",
+    "registerStepDone": "Done",
+    "registerReviewHint": "Review your account details before continuing.",
+    "acceptTermsPrefix": "I accept the",
+    "acceptTermsAnd": "and",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "termsHref": "https://www.shpalljet.net/terms",
+    "privacyHref": "https://www.shpalljet.net/privacy",
+    "acceptTermsRequired": "You must accept the terms to continue.",
+    "passwordMinLength": "Password must be at least 6 characters.",
+    "trustSecure": "Secure",
+    "trustFast": "Fast",
+    "trustNoSpam": "No spam",
+    "closeModal": "Close",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "registerStepsLabel": "Registration steps"
   },
   "search": {
     "title": "Search",
@@ -542,6 +569,244 @@
       "title": "Generating title…",
       "description": "Writing description…",
       "preparing": "Preparing listing…"
+    }
+  },
+  "legal": {
+    "badge": "Legal document",
+    "tocTitle": "Contents",
+    "tocLabel": "Document navigation",
+    "footerNavLabel": "Legal links",
+    "terms": {
+      "seoTitle": "Terms of Service | Shpalljet",
+      "seoDescription": "Read the Shpalljet Terms of Service — the premium online marketplace for buying and selling in Albania and Kosovo.",
+      "title": "Terms of Service",
+      "subtitle": "These terms govern your use of the Shpalljet platform, including listings, messaging, payments, and the responsibilities of all parties.",
+      "lastUpdated": "Last updated: 14 July 2026",
+      "sections": {
+        "introduction": {
+          "title": "Introduction",
+          "paragraphs": [
+            "Welcome to Shpalljet (“Platform”, “we”, “us”, “our”). By accessing or using shpalljet.net and related services, you agree to these Terms of Service (“Terms”) and our Privacy Policy.",
+            "Shpalljet is an online marketplace connecting buyers and sellers in Albania, Kosovo, and the region. We provide tools to publish listings, communicate between users, and, where offered, payment or promotion services.",
+            "If you do not agree to these Terms, do not use the Platform. For legal enquiries, contact legal@shpalljet.net."
+          ]
+        },
+        "eligibility": {
+          "title": "Eligibility",
+          "paragraphs": [
+            "To use Shpalljet you must be at least 18 years old or have the legal age to enter into binding agreements under the law of your country of residence (Albania, Kosovo, or otherwise).",
+            "By registering an account, you represent that the information you provide is accurate and complete, and that you have authority to act on behalf of any business entity you register."
+          ],
+          "list": [
+            "Persons prohibited by law (e.g. minors without parental consent) may not create accounts.",
+            "We may request additional identity verification for certain features (e.g. high-volume selling or payments).",
+            "Use by entities subject to international sanctions or local prohibitions is not permitted."
+          ]
+        },
+        "accounts": {
+          "title": "Accounts",
+          "paragraphs": [
+            "You are responsible for keeping your account credentials confidential and for all activity under your account. Notify privacy@shpalljet.net immediately if you suspect unauthorized access.",
+            "You may register with email and password or Google Sign-In, depending on available options. Google Sign-In is also subject to Google’s terms.",
+            "We reserve the right to suspend or terminate your account if you breach these Terms, if we receive a valid legal request, or to protect the security of the Platform."
+          ]
+        },
+        "listings": {
+          "title": "Listings",
+          "paragraphs": [
+            "Sellers are solely responsible for their listing content, including title, description, photos, price, and accuracy. You warrant that you have the legal right to sell the items you list.",
+            "Misleading, fraudulent, duplicate, or unlawful listings (e.g. prohibited goods, counterfeit products, unlicensed services) may be removed without prior notice.",
+            "We are not a party to transactions between buyers and sellers except where expressly stated (e.g. paid promotion services purchased directly from us)."
+          ],
+          "list": [
+            "Items must match the declared category and condition.",
+            "Photos must depict the actual item, not stock or third-party images without permission.",
+            "Prices must be stated clearly; additional fees should be communicated before a deal is finalized."
+          ]
+        },
+        "marketplaceRules": {
+          "title": "Marketplace rules",
+          "paragraphs": [
+            "Communication between parties usually takes place through the Platform’s messaging tools. Do not direct users off-platform solely to circumvent our safeguards or fees where they apply.",
+            "In-person transactions (meetups, delivery, transport) are arranged between buyer and seller. Choose safe public locations; Shpalljet does not guarantee delivery or product quality.",
+            "Reports about listings or users may be submitted through Platform tools or to abuse@shpalljet.net. We review reports in line with our moderation policies."
+          ],
+          "list": [
+            "Spam, price manipulation, and false availability listings are prohibited.",
+            "Sale of weapons, drugs, counterfeit goods, illegal content, and items prohibited under Albanian or Kosovar law is forbidden.",
+            "Respect intellectual property rights and the privacy of third parties."
+          ]
+        },
+        "payments": {
+          "title": "Payments",
+          "paragraphs": [
+            "Most transactions between buyers and sellers occur off-platform (cash, bank transfer, etc.) unless we offer integrated payment or paid promotion services.",
+            "For purchases of services from Shpalljet (e.g. featured listings, subscriptions, AI credits), prices are shown before confirmation. Payments are processed by third-party payment providers; we do not store full credit card numbers.",
+            "Refunds for services purchased from us are handled according to the specific service policy at the time of purchase and applicable law. Do not expect refunds for peer-to-peer transactions arranged outside the Platform."
+          ]
+        },
+        "userConduct": {
+          "title": "User conduct",
+          "paragraphs": [
+            "You agree not to use the Platform for unlawful purposes, to harm others, or to disrupt the service.",
+            "Harassment, hate speech, threats, fraud, phishing, unauthorized scraping, attempts to access other users’ accounts, or distribution of malware is prohibited."
+          ],
+          "list": [
+            "Do not collect personal data from users without clear consent.",
+            "Do not create multiple accounts to manipulate ratings or evade suspensions.",
+            "Cooperate with competent authorities when required by law."
+          ]
+        },
+        "intellectualProperty": {
+          "title": "Intellectual property",
+          "paragraphs": [
+            "The Shpalljet name, logos, Platform design, and software are owned by Shpalljet or our licensors. You receive no rights except a limited license for personal, non-commercial use of the service.",
+            "By publishing content (text, photos, video), you grant us a non-exclusive, worldwide, royalty-free license to display, store, and distribute it for Platform operation (e.g. thumbnails, search results).",
+            "If you believe content infringes your rights, send notice to legal@shpalljet.net with sufficient evidence; we will review and act as required by law."
+          ]
+        },
+        "suspension": {
+          "title": "Suspension and termination",
+          "paragraphs": [
+            "We may suspend, restrict, or terminate your access at any time if you breach these Terms, if required by law, or to protect other users.",
+            "You may close your account at any time from profile settings or by contacting us. Some data may be retained as required by law or for dispute resolution.",
+            "Provisions that naturally survive (e.g. liability limits, intellectual property) continue after account termination."
+          ]
+        },
+        "disclaimer": {
+          "title": "Disclaimer",
+          "paragraphs": [
+            "The Platform is provided “as is” and “as available”. To the maximum extent permitted by law, Shpalljet does not warrant the accuracy of listings, uninterrupted availability, or the outcome of transactions between users.",
+            "We are not liable for indirect, special, or consequential losses arising from use of the Platform or agreements between third parties.",
+            "Nothing in these Terms excludes liability that cannot be excluded under Albanian, Kosovar, or applicable European law (e.g. death or injury caused by negligence)."
+          ]
+        },
+        "contact": {
+          "title": "Contact",
+          "paragraphs": [
+            "For questions about these Terms or legal notices, contact us:",
+            "Email: legal@shpalljet.net",
+            "Website: https://www.shpalljet.net",
+            "Abuse reports: abuse@shpalljet.net"
+          ]
+        }
+      }
+    },
+    "privacy": {
+      "seoTitle": "Privacy Policy | Shpalljet",
+      "seoDescription": "Learn how Shpalljet collects, uses, and protects your personal data in Albania, Kosovo, and the EU — including cookies, Google Sign-In, and GDPR rights.",
+      "title": "Privacy Policy",
+      "subtitle": "This policy explains how we handle personal data when you use Shpalljet, in accordance with data protection laws in Albania, Kosovo, and, where applicable, the GDPR.",
+      "lastUpdated": "Last updated: 14 July 2026",
+      "sections": {
+        "informationCollected": {
+          "title": "Information collected",
+          "paragraphs": [
+            "We collect data you provide directly, data generated through use of the Platform, and data from third parties (e.g. Google) when you choose to connect your account.",
+            "Main purposes: providing the marketplace service, security, communication, product improvement, legal compliance, and, with your consent where required, analytics."
+          ],
+          "list": [
+            "Identity and contact data (name, email, phone).",
+            "Listing and message content you publish or send.",
+            "Technical data (IP address, browser type, device identifiers, access logs).",
+            "Account preferences and settings (language, notifications)."
+          ]
+        },
+        "accountInformation": {
+          "title": "Account information",
+          "paragraphs": [
+            "When you create an account, we store email, display name, password (hashed — we never store plain text), and optionally phone number or profile photo.",
+            "Public profile information (e.g. display name, ratings, active listings) may be visible to other users according to your settings.",
+            "We may process identity verification data when required for security or specific services."
+          ]
+        },
+        "cookies": {
+          "title": "Cookies",
+          "paragraphs": [
+            "We use cookies and local storage for login sessions, preferences (e.g. language), and core Platform functionality.",
+            "Essential cookies are necessary for the service to work. Analytics or marketing cookies, where used, rely on your consent where required by law."
+          ],
+          "list": [
+            "You can manage cookies in browser settings; some features may not work without essential cookies.",
+            "For the installed app (PWA), local storage may hold session data and cache for performance."
+          ]
+        },
+        "analytics": {
+          "title": "Analytics",
+          "paragraphs": [
+            "We may use analytics tools to understand how the Platform is used (e.g. pages visited, aggregate actions) to improve performance and experience.",
+            "Where analytics processes personal data, we or the analytics provider act as processors under appropriate data processing agreements.",
+            "Analytics data is usually aggregated; direct identifiers are minimized where possible."
+          ]
+        },
+        "googleSignIn": {
+          "title": "Google Sign-In",
+          "paragraphs": [
+            "If you choose “Continue with Google”, we receive basic profile information from Google (e.g. name, email, profile photo) and your Google account identifier, according to the permissions you grant on Google’s screen.",
+            "Google processes data under its own privacy policy. We use this data only for authentication, account creation or linking, and security.",
+            "You may disconnect Google Sign-In via Google account settings or by contacting us to remove the link."
+          ]
+        },
+        "deviceInformation": {
+          "title": "Device information",
+          "paragraphs": [
+            "We automatically collect technical information about your device and connection: device type, operating system, browser version, approximate IP address, time zone, and error logs.",
+            "This helps diagnose issues, prevent fraud, and protect your account.",
+            "We do not request unnecessary access to device sensors or contacts except where a specific feature (e.g. photo upload) requires your consent."
+          ]
+        },
+        "storage": {
+          "title": "Storage and retention",
+          "paragraphs": [
+            "Data is stored on secure servers, primarily within the EU or countries with adequate safeguards, through our cloud providers (e.g. Supabase and web hosting).",
+            "We retain personal data only as long as needed for stated purposes: active account, legal obligations, dispute resolution, or limited backup.",
+            "After account closure, some data is deleted or anonymized within reasonable timeframes; security logs may be kept longer where required by law."
+          ]
+        },
+        "sharing": {
+          "title": "Sharing",
+          "paragraphs": [
+            "We do not sell your personal data. We share it only when necessary to provide the service, comply with law, or with your consent."
+          ],
+          "list": [
+            "Service providers (hosting, email, payments, analytics) acting on our instructions.",
+            "Other users — only information you choose to make public (listings, messages).",
+            "Competent authorities when required by valid legal order.",
+            "In a business transfer (e.g. merger), with notice to you where required."
+          ]
+        },
+        "security": {
+          "title": "Security",
+          "paragraphs": [
+            "We implement reasonable technical and organizational measures: encryption in transit (HTTPS/TLS), access controls, password hashing, and monitoring for suspicious activity.",
+            "No system is 100% secure. If an incident affecting your data occurs, we will act according to legal notification and mitigation obligations.",
+            "We encourage strong, unique passwords and not sharing account credentials."
+          ]
+        },
+        "gdprRights": {
+          "title": "Your rights (GDPR and local law)",
+          "paragraphs": [
+            "Depending on your country of residence, you may have rights to access, rectify, erase, restrict, or object to processing of personal data, as well as data portability and withdrawal of consent (where processing is consent-based).",
+            "To exercise your rights, send a request to privacy@shpalljet.net. We will respond within legal timeframes (typically 30 days).",
+            "You may lodge a complaint with your local data protection authority (e.g. the Commissioner for the Right to Information and Personal Data Protection in Albania, or the Information and Privacy Agency in Kosovo)."
+          ],
+          "list": [
+            "Right of access — a copy of data we hold about you.",
+            "Right to rectification — correction of inaccurate data.",
+            "Right to erasure — when there is no longer a legal basis to retain data.",
+            "Right to object — to processing based on legitimate interests, where applicable."
+          ]
+        },
+        "contact": {
+          "title": "Privacy contact",
+          "paragraphs": [
+            "For privacy questions, rights requests, or complaints:",
+            "Email: privacy@shpalljet.net",
+            "Website: https://www.shpalljet.net/privacy",
+            "This policy may be updated; the revision date is shown at the top of this page."
+          ]
+        }
+      }
     }
   }
 }

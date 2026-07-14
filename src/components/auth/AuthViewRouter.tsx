@@ -33,6 +33,7 @@ const AuthViewRouter = ({
     formLoading,
     socialLoading,
     handleGoogleSignIn,
+    handleAppleSignIn,
     handleSignIn,
     handleSignUp,
     handleForgotPassword,
@@ -46,6 +47,7 @@ const AuthViewRouter = ({
           formLoading={formLoading}
           socialLoading={socialLoading}
           onGoogleSignIn={handleGoogleSignIn}
+          onAppleSignIn={handleAppleSignIn}
           onSignUp={(email, password, displayName) => {
             setPendingEmail(email);
             void handleSignUp(email, password, displayName);
@@ -91,6 +93,7 @@ const AuthViewRouter = ({
           formLoading={formLoading}
           socialLoading={socialLoading}
           onGoogleSignIn={handleGoogleSignIn}
+          onAppleSignIn={handleAppleSignIn}
           onSignIn={handleSignIn}
           onForgotPassword={() => setView("forgot-password")}
           onRegister={() => setView("register")}

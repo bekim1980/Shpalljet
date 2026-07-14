@@ -16,7 +16,7 @@ describe("auth integration", () => {
   });
 
   it("SocialProviders does not render Apple", () => {
-    const social = readFileSync("src/components/auth/views/SocialProviders.tsx", "utf8");
-    expect(social).not.toMatch(/apple|continueApple/i);
+    const social = readFileSync("src/components/auth/ui/SocialAuthButtons.tsx", "utf8");
+    expect(social).toMatch(/isOAuthProviderEnabled\("apple"\)/);
   });
 });

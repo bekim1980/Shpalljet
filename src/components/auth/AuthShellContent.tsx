@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { Shield, Zap } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import AuthViewRouter from "@/components/auth/AuthViewRouter";
-import { authCardClass } from "@/components/auth/authStyles";
+import AuthModal from "@/components/auth/ui/AuthModal";
 import { useAuthFormActions } from "@/components/auth/useAuthFormActions";
 import type { AuthShellVariant, AuthView } from "@/components/auth/types";
 
@@ -23,7 +21,6 @@ const AuthShellContent = ({
   onClose,
   autoFocus = false,
 }: AuthShellContentProps) => {
-  const { t } = useTranslation();
   const [view, setView] = useState<AuthView>(initialView);
   const [pendingEmail, setPendingEmail] = useState("");
 
@@ -38,8 +35,15 @@ const AuthShellContent = ({
     onViewChange: setView,
   });
 
+  const compactPanel = view === "forgot-password";
+
   return (
-    <div className={`${authCardClass} p-5 sm:p-6 space-y-4`}>
+    <AuthModal
+      view={view}
+      onClose={onClose}
+      showClose={variant === "modal" && !!onClose}
+      compact={compactPanel}
+    >
       <AuthViewRouter
         view={view}
         idPrefix={idPrefix}
@@ -50,15 +54,7 @@ const AuthShellContent = ({
         onClose={onClose}
         actions={actions}
       />
-
-      {view !== "success" && view !== "verify-email" && (
-        <div className="flex items-center justify-center gap-2 pt-1 text-[11px] text-white/35">
-          <Shield className="h-3 w-3" aria-hidden />
-          <Zap className="h-3 w-3" aria-hidden />
-          <span>{t("login.trustSignals")}</span>
-        </div>
-      )}
-    </div>
+    </AuthModal>
   );
 };
 

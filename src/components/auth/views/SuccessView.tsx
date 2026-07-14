@@ -1,8 +1,10 @@
 import { CheckCircle2 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { authCtaClass } from "@/components/auth/authStyles";
+import AuthHeaderBadge from "@/components/auth/ui/AuthHeaderBadge";
+import GoldButton from "@/components/auth/ui/GoldButton";
+import { authViewTransitionClass } from "@/components/auth/authStyles";
+import { cn } from "@/lib/utils";
 
 type SuccessViewProps = {
   onContinue: () => void;
@@ -18,19 +20,17 @@ const SuccessView = ({ onContinue, autoCloseMs = 1200 }: SuccessViewProps) => {
   }, [onContinue, autoCloseMs]);
 
   return (
-    <div className="space-y-6 text-center py-4">
-      <div className="mx-auto w-14 h-14 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
-        <CheckCircle2 className="h-7 w-7 text-gold/90" />
-      </div>
-      <div className="space-y-2">
-        <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-white">
+    <div className={cn("space-y-6 text-center py-2 -mt-6", authViewTransitionClass)}>
+      <AuthHeaderBadge icon={CheckCircle2} />
+      <div className="space-y-2 px-2">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-white">
           {t("auth.successTitle")}
         </h2>
         <p className="text-sm text-white/55">{t("auth.successBody")}</p>
       </div>
-      <Button type="button" onClick={onContinue} className={authCtaClass}>
+      <GoldButton type="button" onClick={onContinue} showArrow={false}>
         {t("auth.continueBrowsing")}
-      </Button>
+      </GoldButton>
     </div>
   );
 };

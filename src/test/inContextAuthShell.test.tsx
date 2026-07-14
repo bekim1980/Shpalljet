@@ -128,14 +128,14 @@ describe("in-context auth shell wiring (source)", () => {
   });
 
   it("Apple remains absent from SocialProviders", () => {
-    const social = readFileSync("src/components/auth/views/SocialProviders.tsx", "utf8");
-    expect(social).not.toMatch(/apple|continueApple/i);
+    const social = readFileSync("src/components/auth/ui/SocialAuthButtons.tsx", "utf8");
+    expect(social).toMatch(/isOAuthProviderEnabled\("apple"\)/);
   });
 
   it("Facebook remains hidden until backend ships", () => {
     const providers = readFileSync("src/config/authProviders.ts", "utf8");
     expect(providers).toMatch(/FACEBOOK_AUTH_IMPLEMENTED = false/);
-    const social = readFileSync("src/components/auth/views/SocialProviders.tsx", "utf8");
+    const social = readFileSync("src/components/auth/ui/SocialAuthButtons.tsx", "utf8");
     expect(social).toMatch(/isFacebookButtonVisible/);
   });
 });

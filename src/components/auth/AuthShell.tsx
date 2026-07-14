@@ -12,6 +12,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import AuthShellContent from "@/components/auth/AuthShellContent";
+import { focusAuthFirstField } from "@/components/auth/focusAuthFirstField";
+import { authOverlayClass } from "@/components/auth/authStyles";
 import { useTranslation } from "react-i18next";
 import type { AuthView } from "@/components/auth/types";
 
@@ -24,8 +26,6 @@ type AuthShellProps = {
   onAfterClose?: () => void;
   contentRef?: React.RefObject<HTMLDivElement | null>;
 };
-
-const AUTH_OVERLAY_CLASS = "bg-black/70 backdrop-blur-sm";
 
 const handleCloseAutoFocus = (e: Event, onAfterClose?: () => void) => {
   e.preventDefault();
@@ -59,14 +59,14 @@ const AuthShell = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          overlayClassName={AUTH_OVERLAY_CLASS}
-          className="border-t border-white/10 bg-black/90 backdrop-blur-xl p-0 pb-[env(safe-area-inset-bottom)] max-h-[92vh] overflow-y-auto rounded-t-2xl"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          overlayClassName={authOverlayClass}
+          className="border-t border-gold/15 bg-transparent p-0 pb-[max(1rem,env(safe-area-inset-bottom))] max-h-[94vh] overflow-y-auto rounded-t-[28px] [&>button.absolute]:hidden"
+          onOpenAutoFocus={focusAuthFirstField}
           onCloseAutoFocus={(e) => handleCloseAutoFocus(e, onAfterClose)}
         >
           <SheetTitle className="sr-only">{t("login.signInToAccount")}</SheetTitle>
           <SheetDescription className="sr-only">{t("login.valueProp")}</SheetDescription>
-          <div className="px-3 pt-3 pb-4">{content}</div>
+          <div className="px-4 pt-2 pb-2">{content}</div>
         </SheetContent>
       </Sheet>
     );
@@ -75,9 +75,9 @@ const AuthShell = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName={AUTH_OVERLAY_CLASS}
-        className="max-w-md border-0 bg-transparent p-0 shadow-none gap-0 overflow-visible sm:rounded-2xl"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        overlayClassName={authOverlayClass}
+        className="max-w-[520px] w-[calc(100%-2rem)] border-0 bg-transparent p-0 shadow-none gap-0 overflow-visible sm:rounded-[28px] [&>button.absolute]:hidden motion-reduce:animate-none"
+        onOpenAutoFocus={focusAuthFirstField}
         onCloseAutoFocus={(e) => handleCloseAutoFocus(e, onAfterClose)}
       >
         <DialogTitle className="sr-only">{t("login.signInToAccount")}</DialogTitle>

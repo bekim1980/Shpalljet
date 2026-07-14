@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import AuthShellContent from "@/components/auth/AuthShellContent";
+import AuthPageBackdrop from "@/components/auth/ui/AuthPageBackdrop";
+import AuthTrustRow from "@/components/auth/ui/AuthTrustRow";
 import { RETURNING_KEY } from "@/components/auth/constants";
 import { resolveAuthReturnTo } from "@/lib/authReturnPath";
 import type { AuthView } from "@/components/auth/types";
@@ -36,15 +37,14 @@ const Login = () => {
   }, [location.search]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        <Link to="/" className="block text-center mb-6">
-          <span className="font-display text-3xl font-bold text-gradient-gold">{t("common.appName")}</span>
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 pb-8 overflow-hidden">
+      <AuthPageBackdrop />
+
+      <div className="relative z-10 w-full max-w-[520px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-3 motion-safe:duration-400">
+        <Link to="/" className="block text-center mb-8">
+          <span className="font-display text-3xl sm:text-4xl font-bold text-gradient-gold tracking-wide">
+            {t("common.appName")}
+          </span>
         </Link>
 
         <AuthShellContent
@@ -54,7 +54,11 @@ const Login = () => {
           idPrefix="auth-page"
           autoFocus
         />
-      </motion.div>
+      </div>
+
+      <div className="relative z-10 mt-8 w-full max-w-3xl hidden sm:block">
+        <AuthTrustRow />
+      </div>
     </div>
   );
 };

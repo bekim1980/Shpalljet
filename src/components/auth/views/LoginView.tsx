@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import SocialProviders from "@/components/auth/views/SocialProviders";
-import { authCtaClass, authInputClass } from "@/components/auth/authStyles";
+import AuthDivider from "@/components/auth/ui/AuthDivider";
+import AuthInput from "@/components/auth/ui/AuthInput";
+import AuthTrustRow from "@/components/auth/ui/AuthTrustRow";
+import GoldButton from "@/components/auth/ui/GoldButton";
+import PasswordInput from "@/components/auth/ui/PasswordInput";
+import SocialAuthButtons from "@/components/auth/ui/SocialAuthButtons";
+import { authLinkClass, authViewTransitionClass } from "@/components/auth/authStyles";
 import { RETURNING_KEY } from "@/components/auth/constants";
-import { hasVisibleSocialProviders } from "@/config/authProviders";
+import { hasVisibleSocialProviders, isOAuthProviderEnabled } from "@/config/authProviders";
+import { cn } from "@/lib/utils";
 
 type LoginViewProps = {
   idPrefix: string;
@@ -15,6 +18,7 @@ type LoginViewProps = {
   socialLoading: string | null;
   onSignIn: (email: string, password: string) => void;
   onGoogleSignIn: () => void;
+  onAppleSignIn?: () => void;
   onForgotPassword: () => void;
   onRegister: () => void;
   autoFocus?: boolean;
@@ -26,6 +30,7 @@ const LoginView = ({
   socialLoading,
   onSignIn,
   onGoogleSignIn,
+  onAppleSignIn,
   onForgotPassword,
   onRegister,
   autoFocus = false,
@@ -48,113 +53,79 @@ const LoginView = ({
   }, [autoFocus]);
 
   const headline = isReturning ? t("login.welcomeReturning") : t("login.welcomeNew");
+  const showSocial =
+    hasVisibleSocialProviders() || isOAuthProviderEnabled("apple");
 
   return (
-    <div className="space-y-5">
-      <div className="text-center space-y-1.5">
-        <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-white">
+    <div className={cn("space-y-5", authViewTransitionClass)}>
+      <div className="text-center space-y-2 px-1">
+        <h2 className="font-display text-2xl sm:text-[1.65rem] font-semibold tracking-tight text-white">
           {headline}
         </h2>
-        <p className="text-sm text-white/55">{t("login.valueProp")}</p>
+        <p className="text-sm text-white/55 leading-relaxed whitespace-pre-line">{t("login.valueProp")}</p>
       </div>
 
-      <SocialProviders
-        socialLoading={socialLoading}
-        formLoading={formLoading}
-        onGoogleSignIn={onGoogleSignIn}
-      />
-
-      {hasVisibleSocialProviders() && (
-        <div className="relative py-0.5">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/10" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-black/85 px-3 text-[11px] text-white/45 lowercase tracking-wide">
-              {t("login.orContinueEmail")}
-            </span>
-          </div>
-        </div>
+      {showSocial && (
+        <SocialAuthButtons
+          socialLoading={socialLoading}
+          formLoading={formLoading}
+          onGoogleSignIn={onGoogleSignIn}
+          onAppleSignIn={onAppleSignIn}
+        />
       )}
 
+      {showSocial && <AuthDivider />}
+
       <form
-        className="space-y-3.5"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           onSignIn(email, password);
         }}
       >
-        <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-email`} className="text-xs text-white/70">
-            {t("login.email")}
-          </Label>
-          <div className="relative group">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
-              ref={emailRef}
-              id={`${idPrefix}-email`}
-              type="email"
-              placeholder={t("login.emailPlaceholder")}
-              className={authInputClass}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-        </div>
+        <AuthInput
+          ref={emailRef}
+          id={`${idPrefix}-email`}
+          label={t("login.email")}
+          type="email"
+          inputMode="email"
+          placeholder={t("login.emailPlaceholder")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          icon={<Mail className="h-[18px] w-[18px]" aria-hidden />}
+        />
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor={`${idPrefix}-password`} className="text-xs text-white/70">
-              {t("login.password")}
-            </Label>
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              className="text-xs text-gold/80 hover:text-gold transition-colors"
-            >
+        <PasswordInput
+          id={`${idPrefix}-password`}
+          label={t("login.password")}
+          labelAction={
+            <button type="button" onClick={onForgotPassword} className={cn("text-xs", authLinkClass)}>
               {t("auth.forgotPassword")}
             </button>
-          </div>
-          <div className="relative group">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
-              id={`${idPrefix}-password`}
-              type="password"
-              placeholder="••••••••"
-              className={authInputClass}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="current-password"
-            />
-          </div>
-        </div>
+          }
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+          autoComplete="current-password"
+        />
 
-        <Button type="submit" disabled={formLoading || !!socialLoading} className={authCtaClass}>
-          {formLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              {t("login.ctaContinue")}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </>
-          )}
-        </Button>
+        <GoldButton type="submit" loading={formLoading} disabled={!!socialLoading}>
+          {t("login.loginButton")}
+        </GoldButton>
       </form>
 
       <p className="text-center text-sm text-white/55">
         {t("login.noAccount")}{" "}
-        <button
-          type="button"
-          onClick={onRegister}
-          className="text-gold/90 hover:text-gold font-medium transition-colors"
-        >
-          {t("common.signUp")}
+        <button type="button" onClick={onRegister} className={authLinkClass}>
+          {t("login.registerHere")}
         </button>
       </p>
+
+      <AuthTrustRow compact />
     </div>
   );
 };

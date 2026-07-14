@@ -351,45 +351,72 @@
   },
   "login": {
     "brandName": "LUXE",
-    "createAccount": "Krijo Llogari",
+    "createAccount": "Krijo llogari të re",
     "welcomeBack": "Mirë se Vini Përsëri",
-    "joinMarket": "Bashkohu me tregun më të mirë",
+    "joinMarket": "Bëhu pjesë e komunitetit më të madh\nnë Shqipëri dhe Kosovë.",
     "signInToAccount": "Hyni në llogarinë tuaj",
-    "fullName": "Emri i Plotë",
+    "fullName": "Emri i plotë",
     "namePlaceholder": "Emri juaj",
     "email": "Email",
+    "emailOrPhone": "Email ose Telefon",
     "emailPlaceholder": "ju@shembull.com",
     "password": "Fjalëkalimi",
-    "loginButton": "Hyr",
+    "loginButton": "Kyçu",
     "signUpButton": "Krijo Llogari",
+    "continueButton": "Vazhdo",
     "continueGoogle": "Vazhdo me Google",
     "continueApple": "Vazhdo me Apple",
     "accountCreated": "Llogaria u krijua! Kontrollo email-in për ta konfirmuar.",
     "haveAccount": "Keni tashmë llogari? Hyni",
-    "noAccount": "Nuk keni llogari?",
-    "welcomeNew": "Mirë se erdhe në Shpalljet",
+    "haveAccountShort": "Ke llogari?",
+    "loginHere": "Kyçu këtu",
+    "noAccount": "Nuk ke llogari?",
+    "registerHere": "Regjistrohu këtu",
+    "welcomeNew": "Mirë se erdhe",
     "welcomeReturning": "Mirë se u ktheve",
-    "valueProp": "Bli, shis dhe gjej çdo gjë në një vend",
+    "valueProp": "Kyçu në llogarinë tënde për të vazhduar\nme përvojën tënde në Shpalljet.",
     "socialSubtext": "Pa regjistrim manual • Hyr në sekonda",
     "orContinueEmail": "ose vazhdo me email",
+    "orDivider": "OSE",
+    "rememberMe": "Më mbaj të kyçur",
     "ctaContinue": "Vazhdo",
     "activitySignal": "Shpallje të reja çdo ditë",
-    "trustSignals": "E sigurt • E shpejtë • Pa spam"
+    "trustSignals": "I sigurt · I shpejtë · Pa spam"
   },
   "auth": {
     "forgotPassword": "Keni harruar fjalëkalimin?",
-    "forgotPasswordTitle": "Rivendos fjalëkalimin",
-    "forgotPasswordHint": "Shkruani email-in dhe do t'ju dërgojmë një lidhje rivendosjeje.",
-    "sendResetLink": "Dërgo lidhjen",
+    "forgotPasswordTitle": "Keni harruar fjalëkalimin?",
+    "forgotPasswordHint": "Shkruani email-in ose telefonin tuaj dhe do t'ju dërgojmë udhëzimet për rivendosjen e fjalëkalimit.",
+    "sendResetLink": "Dërgo udhëzimet",
     "resetEmailSent": "Kontrolloni email-in për lidhjen e rivendosjes.",
-    "backToLogin": "Kthehu te hyrja",
+    "backToLogin": "Kthehu te kyçja",
+    "backToPreviousStep": "Kthehu mbrapa",
     "verifyEmailTitle": "Kontrolloni email-in",
     "verifyEmailBody": "Dërguam një lidhje konfirmimi te {{email}}.",
     "verifyEmailBodyGeneric": "Ju dërguam një email me hapat e ardhshëm.",
     "successTitle": "Jeni futur",
     "successBody": "Mirë se u kthyet në Shpalljet.",
     "continueBrowsing": "Vazhdo shfletimin",
-    "continueFacebook": "Vazhdo me Facebook"
+    "continueFacebook": "Vazhdo me Facebook",
+    "registerStepAccount": "Llogaria",
+    "registerStepDetails": "Detajet",
+    "registerStepDone": "Gati",
+    "registerReviewHint": "Kontrollo të dhënat e llogarisë para se të vazhdosh.",
+    "acceptTermsPrefix": "Pranoj",
+    "acceptTermsAnd": "dhe",
+    "termsLink": "Kushtet & Shërbimin",
+    "privacyLink": "Politikën e Privatësisë",
+    "termsHref": "https://www.shpalljet.net/terms",
+    "privacyHref": "https://www.shpalljet.net/privacy",
+    "acceptTermsRequired": "Duhet të pranoni kushtet për të vazhduar.",
+    "passwordMinLength": "Fjalëkalimi duhet të ketë të paktën 6 karaktere.",
+    "trustSecure": "I sigurt",
+    "trustFast": "I shpejtë",
+    "trustNoSpam": "Pa spam",
+    "closeModal": "Mbyll",
+    "showPassword": "Shfaq fjalëkalimin",
+    "hidePassword": "Fshih fjalëkalimin",
+    "registerStepsLabel": "Hapat e regjistrimit"
   },
   "search": {
     "title": "Kërkim",
@@ -539,6 +566,244 @@
       "title": "Duke gjeneruar titullin…",
       "description": "Duke shkruar përshkrimin…",
       "preparing": "Duke përgatitur shpalljen…"
+    }
+  },
+  "legal": {
+    "badge": "Dokument ligjor",
+    "tocTitle": "Përmbajtja",
+    "tocLabel": "Navigimi i dokumentit",
+    "footerNavLabel": "Lidhje ligjore",
+    "terms": {
+      "seoTitle": "Kushtet e Shërbimit | Shpalljet",
+      "seoDescription": "Lexoni kushtet e shërbimit të Shpalljet — tregu online premium për blerje dhe shitje në Shqipëri dhe Kosovë.",
+      "title": "Kushtet e Shërbimit",
+      "subtitle": "Këto kushte rregullojnë përdorimin tuaj të platformës Shpalljet, duke përfshirë listimet, mesazhet, pagesat dhe përgjegjësitë e palëve.",
+      "lastUpdated": "Përditësuar për herë të fundit: 14 korrik 2026",
+      "sections": {
+        "introduction": {
+          "title": "Hyrje",
+          "paragraphs": [
+            "Mirë se vini në Shpalljet (“Platforma”, “ne”, “tonë”). Duke hyrë ose duke përdorur shpalljet.net dhe shërbimet e lidhura, ju pranoni këto Kushte të Shërbimit (“Kushtet”) dhe Politikën tonë të Privatësisë.",
+            "Shpalljet është një treg online që lidh blerësit dhe shitësit në Shqipëri, Kosovë dhe rajon. Ne ofrojmë mjete për publikimin e shpalljeve, komunikimin midis përdoruesve dhe, ku ofrohet, shërbime pagese ose promovimi.",
+            "Nëse nuk jeni dakord me këto Kushte, mos përdorni Platformën. Për pyetje ligjore, kontaktoni legal@shpalljet.net."
+          ]
+        },
+        "eligibility": {
+          "title": "Përshtatshmëria",
+          "paragraphs": [
+            "Për të përdorur Shpalljet duhet të jeni të paktën 18 vjeç ose të keni moshën ligjore për të lidhur marrëveshje sipas ligjit të vendit tuaj të banimit (Shqipëri, Kosovë ose tjetër).",
+            "Duke regjistruar një llogari, deklaroni se informacioni që jepni është i saktë dhe i plotë dhe se keni autoritetin për të vepruar në emër të subjektit që përfaqësoni, nëse regjistroni një llogari biznesi."
+          ],
+          "list": [
+            "Personat e mbrojtur nga ligji (p.sh. të mitur pa pëlqim prindëror) nuk lejohen të krijojnë llogari.",
+            "Ne mund të kërkojmë verifikim shtesë të identitetit për disa funksione (p.sh. shitje me vëllim të lartë ose pagesa).",
+            "Përdorimi nga entitete të ndaluara nga sanksione ndërkombëtare ose ligji lokal është i ndaluar."
+          ]
+        },
+        "accounts": {
+          "title": "Llogaritë",
+          "paragraphs": [
+            "Ju jeni përgjegjës për ruajtjen e konfidencialitetit të kredencialeve të llogarisë dhe për të gjitha veprimet që kryhen nëpërmjet saj. Njoftoni menjëherë privacy@shpalljet.net nëse dyshoni për akses të paautorizuar.",
+            "Mund të regjistroheni me email dhe fjalëkalim ose me Google Sign-In, sipas opsioneve të disponueshme. Lidhja me Google rregullohet gjithashtu nga kushtet e Google.",
+            "Ne rezervojmë të drejtën të pezullojmë ose mbyllim llogarinë tuaj nëse shkelni këto Kushte, nëse marrim kërkesë ligjore të vlefshme, ose për të mbrojtur sigurinë e Platformës."
+          ]
+        },
+        "listings": {
+          "title": "Shpalljet",
+          "paragraphs": [
+            "Shitësit janë përgjesshëm për përmbajtjen e shpalljeve të tyre, përfshirë titullin, përshkrimin, fotot, çmimin dhe saktësinë e informacionit. Ju garantoni se keni të drejtën ligjore për të shitur artikujt që listoni.",
+            "Shpalljet e gabuara, mashtruese, të përsëritura pa arsye, ose që shkelin ligjin (p.sh. mallra të ndaluara, produkte të falsifikuara, shërbime pa licencë) mund të hiqen pa njoftim paraprak.",
+            "Ne nuk jemi palë në transaksionet midis blerësve dhe shitësve, përveç kur thuhet ndryshe shprehimisht (p.sh. për shërbime promovimi të paguara drejtpërdrejt nga ne)."
+          ],
+          "list": [
+            "Artikujt duhet të përputhen me kategorinë dhe gjendjen e deklaruar.",
+            "Fotot duhet të jenë të artikullit aktual, jo stock ose të huaja pa leje.",
+            "Çmimet duhet të shprehen qartë; tarifat shtesë duhet të komunikohen para finalizimit të marrëveshjes."
+          ]
+        },
+        "marketplaceRules": {
+          "title": "Rregullat e tregut",
+          "paragraphs": [
+            "Komunikimi midis palëve zakonisht bëhet përmes mjeteve të mesazheve të Platformës. Mos i drejtoni përdoruesit jashtë Platformës vetëm për të anashkaluar mbrojtjet tona ose tarifat, kur ato aplikohen.",
+            "Transaksionet fizike (takime, dorëzim, transport) organizohen midis blerësit dhe shitësit. Zgjidhni vende publike dhe të sigurta; Shpalljet nuk garanton dorëzimin ose cilësinë e mallrave.",
+            "Ankesat për shpallje ose përdorues mund të raportohen përmes mjeteve të Platformës ose në abuse@shpalljet.net. Ne shqyrtojmë raportimet në përputhje me politikat tona të moderimit."
+          ],
+          "list": [
+            "Ndalohet spam-i, manipulimi i çmimeve dhe shpalljet e rreme të disponueshmërisë.",
+            "Ndalohet shitja e armëve, drogës, produkteve të falsifikuara, përmbajtjes së paligjshme dhe mallrave të ndaluara nga ligji shqiptar ose kosovar.",
+            "Respektoni të drejtat e pronësisë intelektuale dhe privatësinë e palëve të treta."
+          ]
+        },
+        "payments": {
+          "title": "Pagesat",
+          "paragraphs": [
+            "Shumica e transaksioneve midis blerësve dhe shitësve realizohen jashtë Platformës (para në dorë, transfer bankar, etj.), përveç kur ofrojmë shërbime pagese të integruara ose promovim të paguar.",
+            "Për blerje të shërbimeve nga Shpalljet (p.sh. listime të theksuara, abonime, kredite AI), çmimet shfaqen para konfirmimit. Pagesat përpunohen nga ofrues të tretë të pagesave; ne nuk ruajmë numra të plotë kartash krediti.",
+            "Rimbursimet për shërbimet e blera nga ne rregullohen sipas politikës së shërbimit specifik në momentin e blerjes dhe ligjit në fuqi. Mos prisni rimbursim për transaksione peer-to-peer të organizuara jashtë Platformës."
+          ]
+        },
+        "userConduct": {
+          "title": "Sjellja e përdoruesit",
+          "paragraphs": [
+            "Ju pranoni të mos përdorni Platformën për qëllime të paligjshme, për të dëmtuar të tjerët, ose për të ndërprerë funksionimin e shërbimit.",
+            "Ndalohet ngacmimi, gjuhë e urrejtjes, kërcënimet, mashtrimi, phishing-u, skanimi i paautorizuar, përpjekjet për të hyrë në llogari të tjera, ose shpërndarja e malware-it."
+          ],
+          "list": [
+            "Mos mblidhni të dhëna personale të përdoruesve pa pëlqim të qartë.",
+            "Mos krijoni llogari të shumta për të manipuluar vlerësimet ose për të anashkaluar pezullime.",
+            "Respektoni kërkesat e autoriteteve kompetente kur ligji kërkon bashkëpunim."
+          ]
+        },
+        "intellectualProperty": {
+          "title": "Pronësia intelektuale",
+          "paragraphs": [
+            "Emri Shpalljet, logot, dizajni i Platformës dhe softueri janë pronë e Shpalljet ose licencuesve tanë. Nuk ju jepet asnjë e drejtë mbi to përveç licencës së kufizuar për përdorim personal dhe jo-komercial të shërbimit.",
+            "Duke publikuar përmbajtje (tekst, foto, video), na jepni një licencë jo-ekskluzive, botërore, pa pagesë, për ta shfaqur, ruajtur dhe shpërndarë atë për qëllime të funksionimit të Platformës (p.sh. miniatura, rezultate kërkimi).",
+            "Nëse besoni se përmbajtja shkel të drejtat tuaja, dërgoni njoftim në legal@shpalljet.net me prova të mjaftueshme; ne shqyrtojmë dhe veprojmë sipas ligjit."
+          ]
+        },
+        "suspension": {
+          "title": "Pezullimi dhe përfundimi",
+          "paragraphs": [
+            "Ne mund të pezullojmë, kufizojmë ose mbyllim aksesin tuaj në çdo kohë nëse shkelni Kushtet, nëse kërkohet nga ligji, ose për të mbrojtur përdoruesit e tjerë.",
+            "Mund të përfundoni llogarinë tuaj në çdo kohë nga cilësimet e profilit ose duke na kontaktuar. Disa të dhëna mund të ruhen siç kërkohet nga ligji ose për zgjidhjen e mosmarrëveshjeve.",
+            "Kushtet që natyrshëm duhet të mbijetojnë (p.sh. kufizimet e përgjegjësisë, pronësia intelektuale) vazhdojnë edhe pas përfundimit të llogarisë."
+          ]
+        },
+        "disclaimer": {
+          "title": "Mohimi i përgjegjësisë",
+          "paragraphs": [
+            "Platforma ofrohet “siç është” dhe “sipas disponueshmërisë”. Në masën maksimale të lejuar nga ligji, Shpalljet nuk garanton saktësinë e shpalljeve, disponueshmërinë e vazhdueshme të shërbimit, ose rezultatin e transaksioneve midis përdoruesve.",
+            "Ne nuk jemi përgjegjës për humbje indirekte, të veçanta ose pasuese që rrjedhin nga përdorimi i Platformës ose nga marrëveshjet midis palëve të treta.",
+            "Asgjë në këto Kushte nuk kufizon përgjegjësinë që nuk mund të përjashtohet sipas ligjit shqiptar, kosovar ose të zbatueshëm evropian (p.sh. për vdekje ose lëndim të shkaktuar nga neglizhenca)."
+          ]
+        },
+        "contact": {
+          "title": "Kontakt",
+          "paragraphs": [
+            "Për pyetje rreth këtyre Kushteve ose për njoftime ligjore, na kontaktoni:",
+            "Email: legal@shpalljet.net",
+            "Faqja: https://www.shpalljet.net",
+            "Për ankesa dhe raportime abuzimi: abuse@shpalljet.net"
+          ]
+        }
+      }
+    },
+    "privacy": {
+      "seoTitle": "Politika e Privatësisë | Shpalljet",
+      "seoDescription": "Mësoni si Shpalljet mbledh, përdor dhe mbron të dhënat tuaja personale në Shqipëri, Kosovë dhe BE — përfshirë cookies, Google Sign-In dhe të drejtat GDPR.",
+      "title": "Politika e Privatësisë",
+      "subtitle": "Kjo politikë shpjegon si trajtojmë të dhënat personale kur përdorni Shpalljet, në përputhje me ligjet e mbrojtjes së të dhënave në Shqipëri, Kosovë dhe, ku aplikohet, GDPR.",
+      "lastUpdated": "Përditësuar për herë të fundit: 14 korrik 2026",
+      "sections": {
+        "informationCollected": {
+          "title": "Informacioni që mbledhim",
+          "paragraphs": [
+            "Mbledhim të dhëna që na jepni drejtpërdrejt, të dhëna të gjeneruara nga përdorimi i Platformës, dhe të dhëna nga ofrues të tretë (p.sh. Google) kur zgjidhni të lidhni llogarinë.",
+            "Qëllimet kryesore: ofrimi i shërbimit të tregut, siguria, komunikimi, përmirësimi i produktit, përmbushja e detyrimeve ligjore dhe, me pëlqimin tuaj ku kërkohet, analitika."
+          ],
+          "list": [
+            "Të dhëna identifikuese dhe kontakti (emër, email, telefon).",
+            "Të dhëna të shpalljeve dhe mesazheve që publikoni ose dërgoni.",
+            "Të dhëna teknike (adresë IP, lloj shfletuesi, identifikues pajisjeje, regjistra aksesi).",
+            "Preferenca dhe cilësime llogarie (gjuha, njoftimet)."
+          ]
+        },
+        "accountInformation": {
+          "title": "Informacioni i llogarisë",
+          "paragraphs": [
+            "Kur krijoni llogari, ruajmë email-in, emrin e shfaqur, fjalëkalimin (të hash-uar — ne nuk e ruajmë në tekst të qartë), dhe opsionalisht numrin e telefonit ose foton e profilit.",
+            "Informacioni i profilit publik (p.sh. emri i shfaqur, vlerësimet, shpalljet aktive) mund të shfaqet për përdoruesit e tjerë sipas cilësimeve tuaja.",
+            "Mund të përpunojmë të dhëna për verifikim identiteti kur kërkohet për siguri ose për shërbime të caktuara."
+          ]
+        },
+        "cookies": {
+          "title": "Cookies dhe teknologji të ngjashme",
+          "paragraphs": [
+            "Përdorim cookies dhe storage lokal për sesionin e hyrjes, preferencat (p.sh. gjuha), dhe funksione bazë të Platformës.",
+            "Cookies thelbësore janë të nevojshme për funksionimin e shërbimit. Cookies analitike ose marketingu, kur përdoren, bazohen në pëlqimin tuaj ku kërkohet nga ligji."
+          ],
+          "list": [
+            "Mund të menaxhoni cookies nga cilësimet e shfletuesit; disa funksione mund të mos punojnë pa cookies thelbësore.",
+            "Për aplikacionin e instaluar (PWA), storage lokal mund të ruajë të dhëna sesioni dhe cache për performancë."
+          ]
+        },
+        "analytics": {
+          "title": "Analitika",
+          "paragraphs": [
+            "Mund të përdorim mjete analitike për të kuptuar si përdoret Platforma (p.sh. faqe të vizituara, veprime agregate), në mënyrë që të përmirësojmë performancën dhe përvojën.",
+            "Kur analitika përpunon të dhëna personale, ne ose ofruesi i analitikës veprojmë si përpunues në përputhje me marrëveshje të përshtatshme të përpunimit të të dhënave.",
+            "Të dhënat analitike zakonisht agregohen; identifikuesit e drejtpërdrejtë minimizohen kur është e mundur."
+          ]
+        },
+        "googleSignIn": {
+          "title": "Google Sign-In",
+          "paragraphs": [
+            "Nëse zgjidhni “Vazhdo me Google”, marrim nga Google informacion bazë të profilit (p.sh. emër, email, foto profili) dhe identifikuesin e llogarisë Google, sipas autorizimeve që jepni në ekranin e Google.",
+            "Google përpunon të dhënat sipas politikës së vet të privatësisë. Ne përdorim këto të dhëna vetëm për autentikim, krijim ose lidhje llogarie dhe siguri.",
+            "Mund të shkëputni Google Sign-In duke ndryshuar cilësimet e llogarisë Google ose duke na kontaktuar për të hequr lidhjen."
+          ]
+        },
+        "deviceInformation": {
+          "title": "Informacioni i pajisjes",
+          "paragraphs": [
+            "Mbledhim automatikisht informacion teknik për pajisjen dhe lidhjen tuaj: lloji i pajisjes, sistemi operativ, versioni i shfletuesit, adresa IP e përafërt, zona kohore dhe regjistra gabimesh.",
+            "Këto të dhëna ndihmojnë në diagnostikimin e problemeve, parandalimin e mashtrimit, dhe mbrojtjen e llogarisë suaj.",
+            "Nuk kërkojmë akses të panevojshëm në sensorë ose kontakte të pajisjes përveç kur një funksion specifik (p.sh. ngarkim foto) e kërkon me pëlqimin tuaj."
+          ]
+        },
+        "storage": {
+          "title": "Ruajtja dhe kohëzgjatja",
+          "paragraphs": [
+            "Të dhënat ruhen në serverë të sigurt, kryesisht brenda BE ose vendeve me mbrojtje adekuate, përmes ofruesve tanë të cloud (p.sh. Supabase dhe hostimi web).",
+            "Ruajmë të dhënat personale vetëm për aq kohë sa nevojitet për qëllimet e përcaktuara: llogaria aktive, detyrime ligjore, zgjidhje mosmarrëveshjesh, ose backup i kufizuar.",
+            "Pas mbylljes së llogarisë, disa të dhëna fshihen ose anonimizohen brenda afateve të arsyeshme; regjistrat e sigurisë mund të ruhen më gjatë kur ligji e kërkon."
+          ]
+        },
+        "sharing": {
+          "title": "Ndarja e të dhënave",
+          "paragraphs": [
+            "Nuk shesim të dhënat tuaja personale. I ndajmë vetëm kur është e nevojshme për të ofruar shërbimin, për të respektuar ligjin, ose me pëlqimin tuaj."
+          ],
+          "list": [
+            "Ofrues shërbimesh (hosting, email, pagesa, analitika) që veprojnë sipas instruksioneve tona.",
+            "Përdorues të tjerë — vetëm informacion që zgjidhni ta bëni publik (shpallje, mesazhe).",
+            "Autoritete kompetente kur kërkohet me urdhër ligjor të vlefshëm.",
+            "Në rast transferimi biznesi (p.sh. bashkim), me njoftim për ju ku kërkohet."
+          ]
+        },
+        "security": {
+          "title": "Siguria",
+          "paragraphs": [
+            "Zbatojmë masa teknike dhe organizative të arsyeshme: enkriptim në transit (HTTPS/TLS), kontroll aksesi, hash fjalëkalimesh, dhe monitorim për aktivitet të dyshimtë.",
+            "Asnjë sistem nuk është 100% i sigurt. Nëse ndodh një incident që prek të dhënat tuaja, do të veprojmë sipas detyrimeve ligjore për njoftim dhe mitigim.",
+            "Ju inkurajojmë të përdorni fjalëkalim të fortë dhe unik dhe të mos ndani kredencialet e llogarisë."
+          ]
+        },
+        "gdprRights": {
+          "title": "Të drejtat tuaja (GDPR dhe ligji lokal)",
+          "paragraphs": [
+            "Në varësi të vendit tuaj të banimit, mund të keni të drejta për të aksesuar, korrigjuar, fshirë, kufizuar ose kundërshtuar përpunimin e të dhënave personale, si dhe të drejtën e portabilitetit dhe tërheqjes së pëlqimit (ku përpunimi bazohet në pëlqim).",
+            "Për të ushtruar të drejtat, dërgoni kërkesë në privacy@shpalljet.net. Do t’ju përgjigjemi brenda afateve ligjore (zakonisht 30 ditë).",
+            "Keni të drejtë të ankoheni te autoriteti mbikëqyrës i mbrojtjes së të dhënave në vendin tuaj (p.sh. Komisioneri për të Drejtën e Informimit dhe Mbrojtjen e të Dhënave Personale në Shqipëri, ose Agjencia për Informim dhe Privatësi në Kosovë)."
+          ],
+          "list": [
+            "E drejta e aksesit — kopje e të dhënave që mbajmë për ju.",
+            "E drejta e korrigjimit — përditësim i të dhënave të pasakta.",
+            "E drejta e fshirjes — kur nuk ka më arsye ligjore për ruajtje.",
+            "E drejta e kundërshtimit — për përpunim bazuar në interes legjitim, ku aplikohet."
+          ]
+        },
+        "contact": {
+          "title": "Kontakt për privatësinë",
+          "paragraphs": [
+            "Për pyetje, kërkesa të drejtash ose ankesa rreth privatësisë:",
+            "Email: privacy@shpalljet.net",
+            "Faqja: https://www.shpalljet.net/privacy",
+            "Përmbajtja e kësaj politike mund të përditësohet; data e përditësimit shfaqet në krye të faqes."
+          ]
+        }
+      }
     }
   }
 }

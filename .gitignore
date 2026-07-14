@@ -28,5 +28,7 @@ dist-ssr
 
 # Local tooling / reports (see PROJECT_SOURCE_OF_TRUTH.md)
 .tmp/
+.qa-temp/
+test-results/
 lighthouse-pwa.json
 supabase/.temp/

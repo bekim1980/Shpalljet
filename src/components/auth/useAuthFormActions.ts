@@ -72,6 +72,33 @@ export function useAuthFormActions({
     }
   }, [returnTo, markReturning, onViewChange, finishSuccess, variant]);
 
+  const handleAppleSignIn = useCallback(async () => {
+    setSocialLoading("apple");
+    try {
+      setAuthReturnTo(returnTo);
+      const result = await oauthAuth.signInWithOAuth("apple");
+      if (result.redirected) {
+        markReturning();
+        return;
+      }
+      if (result.error) {
+        toast.error(result.error.message);
+      } else {
+        markReturning();
+        if (variant === "modal") {
+          onViewChange?.("success");
+        } else {
+          finishSuccess();
+        }
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error";
+      toast.error(message);
+    } finally {
+      setSocialLoading(null);
+    }
+  }, [returnTo, markReturning, onViewChange, finishSuccess, variant]);
+
   const handleSignIn = useCallback(
     async (email: string, password: string) => {
       setFormLoading(true);
@@ -134,6 +161,7 @@ export function useAuthFormActions({
     formLoading,
     socialLoading,
     handleGoogleSignIn,
+    handleAppleSignIn,
     handleSignIn,
     handleSignUp,
     handleForgotPassword,

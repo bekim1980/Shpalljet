@@ -4,7 +4,7 @@ import { useVertical, type Vertical } from "@/contexts/VerticalContext";
 
 // Routes that must always render with the brand "luxe" (dark + gold) theme,
 // regardless of which vertical the user last selected.
-const LUXE_ROUTES = new Set<string>(["/", "/index", "/login", "/install", "/pricing", "/auth/callback"]);
+const LUXE_ROUTES = new Set<string>(["/", "/index", "/login", "/install", "/pricing", "/terms", "/privacy", "/auth/callback"]);
 
 const VALID_VERTICALS: Vertical[] = ["luxe", "market", "rent", "services", "jobs"];
 

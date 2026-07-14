@@ -9,11 +9,6 @@ const GoogleProvider = require("next-auth/providers/google").default as (
   options: Record<string, string>,
 ) => ReturnType<typeof import("next-auth/providers/google").default>;
 
-console.log("[OAuth Debug]");
-console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-console.log("AUTH_URL:", process.env.AUTH_URL);
-
 /** Resolve public auth base URL for NextAuth (v4 reads NEXTAUTH_URL). */
 export function ensureNextAuthUrl(): void {
   if (process.env.NEXTAUTH_URL) return;

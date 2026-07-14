@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Loader2, Lock, Mail, User } from "lucide-react";
+import { Mail, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import SocialProviders from "@/components/auth/views/SocialProviders";
-import { authCtaClass, authInputClass } from "@/components/auth/authStyles";
-import { hasVisibleSocialProviders } from "@/config/authProviders";
+import { toast } from "sonner";
+import AuthDivider from "@/components/auth/ui/AuthDivider";
+import AuthInput from "@/components/auth/ui/AuthInput";
+import AuthStepIndicator, { type RegisterStep } from "@/components/auth/ui/AuthStepIndicator";
+import GoldButton from "@/components/auth/ui/GoldButton";
+import PasswordInput from "@/components/auth/ui/PasswordInput";
+import SocialAuthButtons from "@/components/auth/ui/SocialAuthButtons";
+import { authLinkClass, authViewTransitionClass } from "@/components/auth/authStyles";
+import { hasVisibleSocialProviders, isOAuthProviderEnabled } from "@/config/authProviders";
+import { cn } from "@/lib/utils";
 
 type RegisterViewProps = {
   idPrefix: string;
@@ -14,6 +18,7 @@ type RegisterViewProps = {
   socialLoading: string | null;
   onSignUp: (email: string, password: string, displayName: string) => void;
   onGoogleSignIn: () => void;
+  onAppleSignIn?: () => void;
   onLogin: () => void;
   autoFocus?: boolean;
 };
@@ -24,132 +29,196 @@ const RegisterView = ({
   socialLoading,
   onSignUp,
   onGoogleSignIn,
+  onAppleSignIn,
   onLogin,
   autoFocus = false,
 }: RegisterViewProps) => {
   const { t } = useTranslation();
+  const [step, setStep] = useState<RegisterStep>(1);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (autoFocus) nameRef.current?.focus();
-  }, [autoFocus]);
+  }, [autoFocus, step]);
+
+  const stepLabels = [t("auth.registerStepAccount"), t("auth.registerStepDetails"), t("auth.registerStepDone")] as [
+    string,
+    string,
+    string,
+  ];
+
+  const showSocial =
+    hasVisibleSocialProviders() || isOAuthProviderEnabled("apple");
+
+  const advanceFromStep1 = () => {
+    if (!acceptedTerms) {
+      toast.error(t("auth.acceptTermsRequired"));
+      return;
+    }
+    if (password.length < 6) {
+      toast.error(t("auth.passwordMinLength"));
+      return;
+    }
+    setStep(2);
+  };
+
+  const submitRegistration = () => {
+    if (!acceptedTerms) {
+      toast.error(t("auth.acceptTermsRequired"));
+      return;
+    }
+    onSignUp(email, password, displayName);
+  };
 
   return (
-    <div className="space-y-5">
-      <div className="text-center space-y-1.5">
-        <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-white">
+    <div className={cn("space-y-5", authViewTransitionClass)}>
+      <AuthStepIndicator currentStep={step} labels={stepLabels} />
+
+      <div className="text-center space-y-2 px-1">
+        <h2 className="font-display text-2xl sm:text-[1.65rem] font-semibold tracking-tight text-white">
           {t("login.createAccount")}
         </h2>
-        <p className="text-sm text-white/55">{t("login.joinMarket")}</p>
+        <p className="text-sm text-white/55 leading-relaxed whitespace-pre-line">{t("login.joinMarket")}</p>
       </div>
 
-      <SocialProviders
-        socialLoading={socialLoading}
-        formLoading={formLoading}
-        onGoogleSignIn={onGoogleSignIn}
-      />
+      {step === 1 && (
+        <>
+          {showSocial && (
+            <>
+              <SocialAuthButtons
+                socialLoading={socialLoading}
+                formLoading={formLoading}
+                onGoogleSignIn={onGoogleSignIn}
+                onAppleSignIn={onAppleSignIn}
+              />
+              <AuthDivider />
+            </>
+          )}
 
-      {hasVisibleSocialProviders() && (
-        <div className="relative py-0.5">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/10" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-black/85 px-3 text-[11px] text-white/45 lowercase tracking-wide">
-              {t("login.orContinueEmail")}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <form
-        className="space-y-3.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSignUp(email, password, displayName);
-        }}
-      >
-        <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-name`} className="text-xs text-white/70">
-            {t("login.fullName")}
-          </Label>
-          <div className="relative group">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              advanceFromStep1();
+            }}
+          >
+            <AuthInput
               ref={nameRef}
               id={`${idPrefix}-name`}
+              label={t("login.fullName")}
               placeholder={t("login.namePlaceholder")}
-              className={authInputClass}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
               autoComplete="name"
+              icon={<User className="h-[18px] w-[18px]" aria-hidden />}
             />
-          </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-email`} className="text-xs text-white/70">
-            {t("login.email")}
-          </Label>
-          <div className="relative group">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
+            <AuthInput
               id={`${idPrefix}-email`}
+              label={t("login.email")}
               type="email"
               placeholder={t("login.emailPlaceholder")}
-              className={authInputClass}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              icon={<Mail className="h-[18px] w-[18px]" aria-hidden />}
             />
-          </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-password`} className="text-xs text-white/70">
-            {t("login.password")}
-          </Label>
-          <div className="relative group">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-gold/80 transition-colors" />
-            <Input
+            <PasswordInput
               id={`${idPrefix}-password`}
-              type="password"
+              label={t("login.password")}
               placeholder="••••••••"
-              className={authInputClass}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
               autoComplete="new-password"
             />
-          </div>
-        </div>
 
-        <Button type="submit" disabled={formLoading || !!socialLoading} className={authCtaClass}>
-          {formLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              {t("login.signUpButton")}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </>
-          )}
-        </Button>
-      </form>
+            <div className="flex items-start gap-2.5 pt-1">
+              <input
+                id={`${idPrefix}-terms`}
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/5 text-gold focus:ring-gold/40 focus:ring-offset-0"
+                required
+              />
+              <label htmlFor={`${idPrefix}-terms`} className="text-xs text-white/55 leading-relaxed cursor-pointer">
+                {t("auth.acceptTermsPrefix")}{" "}
+                <a
+                  href={t("auth.termsHref")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={authLinkClass}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {t("auth.termsLink")}
+                </a>{" "}
+                {t("auth.acceptTermsAnd")}{" "}
+                <a
+                  href={t("auth.privacyHref")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={authLinkClass}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {t("auth.privacyLink")}
+                </a>
+              </label>
+            </div>
+
+            <GoldButton type="submit" disabled={!!socialLoading}>
+              {t("login.continueButton")}
+            </GoldButton>
+          </form>
+        </>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-3 text-sm">
+            <div className="flex justify-between gap-3 border-b border-white/8 pb-3">
+              <span className="text-white/45">{t("login.fullName")}</span>
+              <span className="text-white font-medium text-right">{displayName}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/45">{t("login.email")}</span>
+              <span className="text-white font-medium text-right break-all">{email}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-white/45 text-center leading-relaxed">{t("auth.registerReviewHint")}</p>
+
+          <GoldButton
+            type="button"
+            loading={formLoading}
+            disabled={!!socialLoading}
+            onClick={submitRegistration}
+          >
+            {t("login.signUpButton")}
+          </GoldButton>
+
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className={cn("w-full text-center text-sm text-white/50 hover:text-gold transition-colors", authLinkClass)}
+          >
+            {t("auth.backToPreviousStep")}
+          </button>
+        </div>
+      )}
 
       <p className="text-center text-sm text-white/55">
-        {t("login.haveAccount")}{" "}
-        <button
-          type="button"
-          onClick={onLogin}
-          className="text-gold/90 hover:text-gold font-medium transition-colors"
-        >
-          {t("common.login")}
+        {t("login.haveAccountShort")}{" "}
+        <button type="button" onClick={onLogin} className={authLinkClass}>
+          {t("login.loginHere")}
         </button>
       </p>
     </div>
