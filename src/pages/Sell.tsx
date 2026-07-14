@@ -185,18 +185,14 @@ const Sell = () => {
         setSubmitting(false);
         return;
       }
-      // Calculate expires_at based on listing type
-      const now = new Date();
-      const daysToAdd = draft.listingType === "paid" ? 30 : 7;
-      const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
-
+      // Security fix: listing_type / expires_at / boost are set server-side (free tier on insert).
+      // Premium selection in the UI is preserved; DB trigger forces free until payment webhook grants paid.
       const insertData: any = {
         seller_id: user.id, title: draft.title.trim(), description,
         price: parseFloat(draft.price) || 0, category: draft.category, category_id: draft.categoryId || null,
         vertical: draft.selectedVertical, image_urls: imageUrls, location: draft.location.trim() || null,
         contact_method: draft.contactMethod, currency: draft.currency || defaultCurrency,
         country: draft.country || null, city: draft.city || null,
-        listing_type: draft.listingType, expires_at: expiresAt,
       };
       if (draft.selectedVertical === "luxe" || draft.selectedVertical === "market") {
         insertData.condition = draft.condition;

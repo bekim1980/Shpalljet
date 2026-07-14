@@ -10,6 +10,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Security fix: require cron secret — prevents anonymous abuse of mass renew/expire.
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const authHeader = req.headers.get('Authorization') ?? '';
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -34,12 +44,17 @@ Deno.serve(async (req) => {
     }
 
     // Separate auto-renew from expired
-    const autoRenewListings = expiredListings.filter((l: any) => l.auto_renew);
-    const expireListings = expiredListings.filter((l: any) => !l.auto_renew);
+    // Security fix: only free listings may auto-renew without a verified subscription/payment.
+    const autoRenewListings = expiredListings.filter(
+      (l: any) => l.auto_renew && l.listing_type !== 'paid',
+    );
+    const expireListings = expiredListings.filter(
+      (l: any) => !l.auto_renew || l.listing_type === 'paid',
+    );
 
-    // Auto-renew: extend expiry by same duration
+    // Auto-renew: extend expiry by same duration (free tier only)
     for (const listing of autoRenewListings) {
-      const days = listing.listing_type === 'paid' ? 30 : 7;
+      const days = 7;
       const newExpiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
       await supabase
         .from('products')

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { assertAccountCanMutate, getMutationErrorMessage } from "@/lib/accountRestriction";
+import { stripClientEntitlementFields } from "@/lib/entitlementSecurity";
 import { toast } from "sonner";
 
 export const useMyListings = () => {
@@ -68,9 +69,14 @@ export const useUpdateListing = () => {
     }) => {
       if (!user) throw new Error("Not authenticated");
       await assertAccountCanMutate(user.id);
+      // Security fix: never trust mutation payload — strip paid/boost/counter fields client-side.
+      const safeUpdates = stripClientEntitlementFields(updates as Record<string, unknown>);
+      if (Object.keys(safeUpdates).length === 0) {
+        throw new Error("Payment is required for this change.");
+      }
       const { error } = await supabase
         .from("products")
-        .update(updates)
+        .update(safeUpdates)
         .eq("id", id);
       if (error) throw error;
     },

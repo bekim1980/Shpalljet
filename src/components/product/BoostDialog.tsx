@@ -1,6 +1,6 @@
 // Boost simulation dialog: 24h / 3d / 7d at simulated prices.
-// Confirms before applying, then sets is_boosted + boost_expires_at via useUpdateListing.
-// No real payment — pure simulation until Stripe is wired in.
+// Security: is_boosted + boost_expires_at are blocked at DB (products_guard_entitlements trigger).
+// Boost is granted only via grant_listing_entitlement RPC after verified payment (service_role webhook).
 import { useState } from "react";
 import { Rocket, Loader2, CheckCircle2 } from "lucide-react";
 import {

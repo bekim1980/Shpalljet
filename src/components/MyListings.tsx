@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
+import { buildFreeRenewalUpdates } from "@/lib/entitlementSecurity";
 
 const CATEGORIES = [
   { value: "watches", label: "Orë" },
@@ -125,17 +126,17 @@ const MyListings = () => {
   };
 
   const handleRenew = (product: any, type: "free" | "paid") => {
-    const daysToAdd = type === "paid" ? 30 : 7;
-    const expiresAt = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+    // Security fix: paid renewals require server-side payment; only free renewals are client-initiated.
+    if (type === "paid") {
+      toast.error(t("sell.paymentRequired", "Payment is required for Premium renewal."));
+      return;
+    }
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     setRenewingId(product.id);
     updateListing(
       {
         id: product.id,
-        updates: {
-          status: "active",
-          listing_type: type,
-          expires_at: expiresAt,
-        } as any,
+        updates: buildFreeRenewalUpdates(expiresAt),
       },
       {
         onSuccess: () => {
