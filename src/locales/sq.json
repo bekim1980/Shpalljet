@@ -200,6 +200,8 @@
     "fillRequired": "Ju lutem plotësoni të gjitha fushat e detyrueshme",
     "pendingModeration": "Artikulli u dërgua për moderim. Do të publikohet pas aprovimit.",
     "listingSuccess": "Artikulli u listua me sukses!",
+    "listingCreatedFree": "Listimi u publikua në planin falas.",
+    "listingCreatedFree": "Listimi u publikua në planin falas.",
     "listingFailed": "Dështoi listimi i artikullit",
     "select": "Zgjidhni",
     "boosted": "I promovuar",
@@ -491,6 +493,15 @@
     "faq2A": "Po, mund ta përmirësoni listimin tuaj në çdo kohë duke zgjedhur opsionin Premium.",
     "faq3Q": "Si funksionon Promovimi?",
     "faq3A": "Listimi juaj shfaqet në krye të rezultateve të kërkimit për 7 ditë, duke rritur dukshmërinë."
+  },
+  "payments": {
+    "checkoutSuccessPremium": "Pagesa u krye — Premium do të shfaqet së shpejti.",
+    "checkoutSuccessBoost": "Pagesa u krye — boost do të shfaqet së shpejti.",
+    "checkoutCancelled": "Pagesa u anulua. Nuk u ngarkua asgjë dhe listimi mbeti i pandryshuar.",
+    "checkoutFailed": "Pagesa dështoi. Asnjë privilegj nuk u dhurua.",
+    "notConfigured": "Pagesat nuk janë konfiguruar ende. Kontaktoni mbështetjen.",
+    "signInRequired": "Ju lutemi identifikohuni për të vazhduar me pagesën.",
+    "autoRenewDisableHint": "Rinovimi automatik mbetet aktiv deri në fund të periudhës aktuale."
   },
   "myListings": {
     "noListings": "Ende nuk keni listuar artikuj",

@@ -17,6 +17,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
+import { buildFreeRenewalUpdates } from "@/lib/entitlementSecurity";
+import { useAuth } from "@/hooks/useAuth";
+import { CheckoutAuthError, CheckoutConfigError, redirectToCheckout } from "@/lib/createCheckoutSession";
+import { CATALOG_DISPLAY } from "@/lib/entitlementCatalogDisplay";
 
 const CATEGORIES = [
   { value: "watches", label: "Orë" },
@@ -43,6 +47,7 @@ const getDaysLeft = (expiresAt: string | null): number | null => {
 const MyListings = () => {
   const { t } = useTranslation();
   const { currency: defaultCurrency } = useLocale();
+  const { session } = useAuth();
   const { data: listings, isLoading } = useMyListings();
   const { mutate: deleteListing } = useDeleteListing();
   const { mutate: updateListing, isPending: isUpdating } = useUpdateListing();
@@ -124,18 +129,44 @@ const MyListings = () => {
     });
   };
 
+  const startPaidCheckout = async (
+    product: any,
+    entitlementType: "premium_renew" | "auto_renew_on",
+  ) => {
+    if (!session?.access_token) {
+      toast.error(t("payments.signInRequired", "Please sign in to continue."));
+      return;
+    }
+    setRenewingId(product.id);
+    try {
+      await redirectToCheckout({
+        productId: product.id,
+        entitlementType,
+        accessToken: session.access_token,
+      });
+    } catch (err) {
+      if (err instanceof CheckoutConfigError) {
+        toast.error(t("payments.notConfigured", "Payments are not configured yet."));
+      } else if (err instanceof CheckoutAuthError) {
+        toast.error(t("payments.signInRequired", "Please sign in to continue."));
+      } else {
+        toast.error(err instanceof Error ? err.message : t("payments.checkoutFailed"));
+      }
+      setRenewingId(null);
+    }
+  };
+
   const handleRenew = (product: any, type: "free" | "paid") => {
-    const daysToAdd = type === "paid" ? 30 : 7;
-    const expiresAt = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+    if (type === "paid") {
+      void startPaidCheckout(product, "premium_renew");
+      return;
+    }
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     setRenewingId(product.id);
     updateListing(
       {
         id: product.id,
-        updates: {
-          status: "active",
-          listing_type: type,
-          expires_at: expiresAt,
-        } as any,
+        updates: buildFreeRenewalUpdates(expiresAt),
       },
       {
         onSuccess: () => {
@@ -147,16 +178,13 @@ const MyListings = () => {
     );
   };
 
-  // Note: boost is now driven by <BoostDialog /> with duration choice + simulated checkout.
-
-  const toggleAutoRenew = (product: any) => {
-    updateListing(
-      {
-        id: product.id,
-        updates: { auto_renew: !(product as any).auto_renew } as any,
-      },
-      { onSuccess: () => toast.success(t("sell.autoRenewToggled")) }
-    );
+  const toggleAutoRenew = (product: any, enable: boolean) => {
+    if (!enable) {
+      toast.info(t("payments.autoRenewDisableHint", "Auto-renew remains active until the current period ends."));
+      return;
+    }
+    if ((product as any).auto_renew) return;
+    void startPaidCheckout(product, "auto_renew_on");
   };
 
   if (isLoading) {
@@ -231,7 +259,7 @@ const MyListings = () => {
                   <div className="flex items-center gap-1.5 mt-1">
                     <Switch
                       checked={(product as any).auto_renew ?? false}
-                      onCheckedChange={() => toggleAutoRenew(product)}
+                      onCheckedChange={(checked) => toggleAutoRenew(product, checked)}
                       className="scale-75 origin-left"
                     />
                     <span className="text-[10px] text-muted-foreground">{t("sell.autoRenew")}</span>
@@ -253,7 +281,7 @@ const MyListings = () => {
                       disabled={renewingId === product.id}
                       className="px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-[10px] font-medium text-primary transition-colors flex items-center gap-1"
                     >
-                      {renewingId === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3" />30d</>}
+                      {renewingId === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3" />{CATALOG_DISPLAY.premium_renew.durationLabel}</>}
                     </button>
                   </div>
                 ) : (

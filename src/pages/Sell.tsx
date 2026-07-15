@@ -37,6 +37,8 @@ import {
   uploadProductImageWithFallback,
 } from "@/lib/uploadProductImage";
 import type { AiListingAnalysis } from "@/types/aiListing";
+import { CATALOG_DISPLAY } from "@/lib/entitlementCatalogDisplay";
+import { CheckoutAuthError, CheckoutConfigError, redirectToCheckout } from "@/lib/createCheckoutSession";
 
 const verticalIcons: Record<Vertical, React.ElementType> = { luxe: Crown, market: Store, rent: Home, services: Briefcase, jobs: BriefcaseBusiness };
 const contactIcons: Record<string, React.ElementType> = { chat: MessageSquare, phone: Phone, whatsapp: Send, viber: Phone };
@@ -44,7 +46,7 @@ const contactIcons: Record<string, React.ElementType> = { chat: MessageSquare, p
 const fileQualityKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`;
 
 const Sell = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { currency: defaultCurrency } = useLocale();
@@ -148,6 +150,7 @@ const Sell = () => {
     }
     if (!validate({ fromAi: !!aiMeta })) { toast.error(t("sell.fillRequired")); return; }
     setSubmitting(true);
+    const wantsPremium = draft.listingType === "paid";
     try {
       await assertAccountCanMutate(user.id);
       let description = draft.description.trim();
@@ -185,18 +188,13 @@ const Sell = () => {
         setSubmitting(false);
         return;
       }
-      // Calculate expires_at based on listing type
-      const now = new Date();
-      const daysToAdd = draft.listingType === "paid" ? 30 : 7;
-      const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
-
+      // Listing is always created free/pending; Premium is granted only after Stripe webhook.
       const insertData: any = {
         seller_id: user.id, title: draft.title.trim(), description,
         price: parseFloat(draft.price) || 0, category: draft.category, category_id: draft.categoryId || null,
         vertical: draft.selectedVertical, image_urls: imageUrls, location: draft.location.trim() || null,
         contact_method: draft.contactMethod, currency: draft.currency || defaultCurrency,
         country: draft.country || null, city: draft.city || null,
-        listing_type: draft.listingType, expires_at: expiresAt,
       };
       if (draft.selectedVertical === "luxe" || draft.selectedVertical === "market") {
         insertData.condition = draft.condition;
@@ -219,15 +217,54 @@ const Sell = () => {
         insertData.condition = "used";
       }
       if (draft.selectedVertical === "luxe") { insertData.moderation_status = "pending"; insertData.status = "pending"; }
-      const { error } = await supabase.from("products").insert(insertData);
+      const { data: inserted, error } = await supabase
+        .from("products")
+        .insert(insertData)
+        .select("id")
+        .single();
       if (error) throw error;
+
       clearDraft();
       setCreationMode("manual");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["my-listings"] });
       queryClient.invalidateQueries({ queryKey: ["trending-preview"] });
-      if (draft.selectedVertical === "luxe") { toast.success(t("sell.pendingModeration")); } else { toast.success(t("sell.listingSuccess")); }
-      navigate("/profile");
+
+      if (draft.selectedVertical === "luxe") {
+        toast.success(t("sell.pendingModeration"));
+        navigate("/profile");
+        return;
+      }
+
+      if (wantsPremium) {
+        if (!session?.access_token) {
+          toast.success(t("sell.listingSuccess"));
+          navigate(`/product/${inserted.id}`);
+          return;
+        }
+        try {
+          await redirectToCheckout({
+            productId: inserted.id,
+            entitlementType: "premium",
+            accessToken: session.access_token,
+          });
+          return;
+        } catch (checkoutErr) {
+          if (checkoutErr instanceof CheckoutConfigError) {
+            toast.error(t("payments.notConfigured", "Payments are not configured yet."));
+          } else if (checkoutErr instanceof CheckoutAuthError) {
+            toast.error(t("payments.signInRequired", "Please sign in to pay for Premium."));
+          } else {
+            toast.error(checkoutErr instanceof Error ? checkoutErr.message : t("payments.checkoutFailed"));
+          }
+          toast.success(t("sell.listingCreatedFree", "Listing published on the free plan."));
+          navigate(`/product/${inserted.id}`);
+          return;
+        }
+      }
+
+      toast.success(t("sell.listingSuccess"));
+      navigate(`/product/${inserted.id}`);
     } catch (err: any) { toast.error(err.message || t("sell.listingFailed")); } finally { setSubmitting(false); }
   };
 
@@ -651,7 +688,9 @@ const Sell = () => {
                   <span className={`text-sm font-display font-bold block ${draft.listingType === "paid" ? "text-primary" : "text-foreground"}`}>
                     {t("sell.paidListing")}
                   </span>
-                  <span className="text-[11px] text-muted-foreground block mt-1">{t("sell.paidTag")}</span>
+                  <span className="text-[11px] text-muted-foreground block mt-1">
+                    {CATALOG_DISPLAY.premium.priceLabel} • {CATALOG_DISPLAY.premium.durationLabel}
+                  </span>
                 </button>
               </div>
             </div>
