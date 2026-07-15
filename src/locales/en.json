@@ -201,6 +201,7 @@
     "fillRequired": "Please fill in all required fields",
     "pendingModeration": "Item submitted for moderation. It will be published after approval.",
     "listingSuccess": "Item listed successfully!",
+    "listingCreatedFree": "Listing published on the free plan.",
     "listingFailed": "Failed to list the item",
     "select": "Select",
     "boosted": "Boosted",
@@ -494,6 +495,15 @@
     "faq2A": "Yes, you can upgrade your listing at any time by selecting the Premium option.",
     "faq3Q": "How does Boost work?",
     "faq3A": "Your listing appears at the top of search results for 7 days, increasing visibility."
+  },
+  "payments": {
+    "checkoutSuccessPremium": "Payment successful — Premium will appear shortly.",
+    "checkoutSuccessBoost": "Payment successful — boost will appear shortly.",
+    "checkoutCancelled": "Checkout cancelled. No charge was made and your listing is unchanged.",
+    "checkoutFailed": "Payment failed. No entitlement was granted.",
+    "notConfigured": "Payments are not configured yet. Contact support.",
+    "signInRequired": "Please sign in to continue to checkout.",
+    "autoRenewDisableHint": "Auto-renew stays active until the current period ends."
   },
   "myListings": {
     "noListings": "You haven't listed any items yet",

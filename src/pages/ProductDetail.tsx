@@ -30,6 +30,7 @@ import MakeOfferDialog from "@/components/product/MakeOfferDialog";
 import FullscreenViewer from "@/components/product/FullscreenViewer";
 import BoostDialog from "@/components/product/BoostDialog";
 import { useTrackProductView } from "@/hooks/useProductViews";
+import { useCheckoutReturn } from "@/hooks/useCheckoutReturn";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { track } from "@/lib/analytics";
@@ -109,6 +110,7 @@ const ProductDetail = () => {
   const { data: wishlist } = useWishlist();
   const { mutate: toggleWishlist } = useToggleWishlist();
   useTrackProductView(id);
+  useCheckoutReturn(id);
   const [showPhone, setShowPhone] = useState(false);
   const [fullscreenIdx, setFullscreenIdx] = useState<number | null>(null);
 
