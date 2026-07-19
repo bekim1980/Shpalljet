@@ -48,11 +48,13 @@ const logSearchEvent = async (filters: SearchFilters, resultsCount: number) => {
 
 export function isSearchEnabled(filters: SearchFilterKey): boolean {
   const query = filters.query ?? "";
+  const location = (filters.location ?? "").trim();
   return (
     query.length >= 2 ||
     !!filters.categoryId ||
     !!filters.vertical ||
     !!filters.condition ||
+    !!location ||
     filters.priceMin != null ||
     filters.priceMax != null
   );

@@ -9,6 +9,7 @@ export interface ProductWithSeller {
   image_urls: string[];
   seller_id: string;
   category: string;
+  category_id?: string | null;
   description: string;
   condition: string;
   status: string;

@@ -25,23 +25,31 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFindSavedSearch, useCreateSavedSearch, useToggleSavedSearch } from "@/hooks/useSavedSearches";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import {
+  SEARCH_PRICE_MAX_DEFAULT,
+  SEARCH_PRICE_MIN_DEFAULT,
+  applySearchFiltersToParams,
+  parseSearchUrlParams,
+  type SearchSortOption,
+} from "@/lib/searchUrlParams";
 
 const TRENDING_SUGGESTIONS = ["iPhone", "Apartment Tirana", "Rolex", "Office desk", "Bicycle"];
 
-type SortOption = "newest" | "oldest" | "price-low" | "price-high" | "relevance";
-
 const SearchResults = () => {
-  const [params] = useSearchParams();
-  const initialQuery = params.get("q") ?? "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilters = useRef(parseSearchUrlParams(searchParams)).current;
   const { t } = useTranslation();
   const { currency } = useLocale();
 
-  const [query, setQuery] = useState(initialQuery);
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [condition, setCondition] = useState<string>("");
-  const [location, setLocation] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
-  const [sortBy, setSortBy] = useState<SortOption>("relevance");
+  const [query, setQuery] = useState(initialFilters.query);
+  const [categoryId, setCategoryId] = useState(initialFilters.categoryId);
+  const [condition, setCondition] = useState(initialFilters.condition);
+  const [location, setLocation] = useState(initialFilters.location);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    initialFilters.priceMin,
+    initialFilters.priceMax,
+  ]);
+  const [sortBy, setSortBy] = useState<SearchSortOption>(initialFilters.sortBy);
   const [showFilters, setShowFilters] = useState(false);
   const [aiInterpretation, setAiInterpretation] = useState<string>("");
   const [aiOriginalQuery, setAiOriginalQuery] = useState<string>("");
@@ -49,6 +57,27 @@ const SearchResults = () => {
 
   const { data: categories } = useCategories();
   const { user } = useAuth();
+
+  // Keep URL in sync with filter state (replace; no history spam). Avoid loops by
+  // returning the previous params object when the serialized query is unchanged.
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = applySearchFiltersToParams(prev, {
+          query,
+          categoryId,
+          condition,
+          location,
+          priceMin: priceRange[0],
+          priceMax: priceRange[1],
+          sortBy,
+        });
+        if (next.toString() === prev.toString()) return prev;
+        return next;
+      },
+      { replace: true },
+    );
+  }, [query, categoryId, condition, location, priceRange, sortBy, setSearchParams]);
 
   // Show back-to-top after scrolling 600px
   useEffect(() => {
@@ -64,16 +93,21 @@ const SearchResults = () => {
 
   const filters = useMemo(() => ({
     query, categoryId: categoryId || undefined, condition: condition || undefined,
-    location: location || undefined, priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
-    priceMax: priceRange[1] < 100000 ? priceRange[1] : undefined, sortBy,
+    location: location || undefined,
+    priceMin: priceRange[0] > SEARCH_PRICE_MIN_DEFAULT ? priceRange[0] : undefined,
+    priceMax: priceRange[1] < SEARCH_PRICE_MAX_DEFAULT ? priceRange[1] : undefined,
+    sortBy,
   }), [query, categoryId, condition, location, priceRange, sortBy]);
 
   const {
     data: infiniteData,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    refetch,
+    isError,
     isFetchNextPageError,
   } = useInfiniteSearchProducts(filters);
 
@@ -82,7 +116,15 @@ const SearchResults = () => {
     [infiniteData],
   );
 
+  /** First-page failure only: no accumulated results (next-page errors keep the grid). */
+  const [initialRetrying, setInitialRetrying] = useState(false);
+  const showFirstPageError =
+    !isFetchNextPageError &&
+    results.length === 0 &&
+    (isError || initialRetrying);
+
   const loadLockRef = useRef(false);
+  const initialRetryLockRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const loadNextPage = useCallback(() => {
@@ -109,6 +151,16 @@ const SearchResults = () => {
     });
   }, [fetchNextPage, isFetchingNextPage]);
 
+  const retryInitialSearch = useCallback(() => {
+    if (initialRetryLockRef.current || isFetching || initialRetrying) return;
+    initialRetryLockRef.current = true;
+    setInitialRetrying(true);
+    void refetch().finally(() => {
+      initialRetryLockRef.current = false;
+      setInitialRetrying(false);
+    });
+  }, [refetch, isFetching, initialRetrying]);
+
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -130,15 +182,15 @@ const SearchResults = () => {
   const savedFilters = {
     query, category_id: categoryId || null, condition: condition || null,
     location: location || null,
-    price_min: priceRange[0] > 0 ? priceRange[0] : null,
-    price_max: priceRange[1] < 100000 ? priceRange[1] : null,
+    price_min: priceRange[0] > SEARCH_PRICE_MIN_DEFAULT ? priceRange[0] : null,
+    price_max: priceRange[1] < SEARCH_PRICE_MAX_DEFAULT ? priceRange[1] : null,
     sort_by: sortBy,
   };
   const existingSaved = useFindSavedSearch(savedFilters);
   const createSaved = useCreateSavedSearch();
   const toggleSaved = useToggleSavedSearch();
 
-  const canSave = !!user && (query.trim().length >= 2 || !!categoryId || !!condition || !!location || priceRange[0] > 0 || priceRange[1] < 100000);
+  const canSave = !!user && (query.trim().length >= 2 || !!categoryId || !!condition || !!location || priceRange[0] > SEARCH_PRICE_MIN_DEFAULT || priceRange[1] < SEARCH_PRICE_MAX_DEFAULT);
 
   const handleSaveSearch = async () => {
     if (!user) { toast.error(t("search.loginToSave") || "Please log in to save searches"); return; }
@@ -161,8 +213,9 @@ const SearchResults = () => {
   };
 
   // Fallback: if AI-filtered search yields 0 results, retry keyword-only
-  const hasAiFilters = !!(condition || location || priceRange[0] > 0 || priceRange[1] < 100000);
-  const fallbackEnabled = !!aiInterpretation && !isLoading && results.length === 0 && hasAiFilters;
+  const hasAiFilters = !!(condition || location || priceRange[0] > SEARCH_PRICE_MIN_DEFAULT || priceRange[1] < SEARCH_PRICE_MAX_DEFAULT);
+  const fallbackEnabled =
+    !!aiInterpretation && !isLoading && !isError && results.length === 0 && hasAiFilters;
   const { data: fallbackResults } = useSearchProducts(
     fallbackEnabled ? { query, sortBy: "relevance" } : { query: "" }
   );
@@ -170,8 +223,19 @@ const SearchResults = () => {
   const usedFallback = fallbackEnabled && (fallbackResults?.length ?? 0) > 0;
   const showingInfinite = !usedFallback && results.length > 0;
 
-  const hasActiveFilters = !!(categoryId || condition || location || priceRange[0] > 0 || priceRange[1] < 100000);
-  const clearFilters = () => { setCategoryId(""); setCondition(""); setLocation(""); setPriceRange([0, 100000]); };
+  const hasActiveFilters = !!(
+    categoryId ||
+    condition ||
+    location ||
+    priceRange[0] > SEARCH_PRICE_MIN_DEFAULT ||
+    priceRange[1] < SEARCH_PRICE_MAX_DEFAULT
+  );
+  const clearFilters = () => {
+    setCategoryId("");
+    setCondition("");
+    setLocation("");
+    setPriceRange([SEARCH_PRICE_MIN_DEFAULT, SEARCH_PRICE_MAX_DEFAULT]);
+  };
   const clearAi = () => { setAiInterpretation(""); setAiOriginalQuery(""); clearFilters(); };
 
   const mapProduct = (p: any) => ({
@@ -191,7 +255,7 @@ const SearchResults = () => {
       <div className="container py-8">
         <div className="max-w-2xl mx-auto mb-6 space-y-3">
           {ENABLE_AI_ASSISTANT && <AISearchBar
-            defaultQuery={initialQuery}
+            defaultQuery={initialFilters.query}
             onParsed={(f: ParsedFilters, raw?: string) => {
               setQuery(f.cleaned_query || query);
               if (f.condition) setCondition(f.condition);
@@ -220,10 +284,10 @@ const SearchResults = () => {
                     <span className="text-foreground font-medium">{aiOriginalQuery || aiInterpretation}</span>
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {(priceRange[0] > 0 || priceRange[1] < 100000) && (
+                    {(priceRange[0] > SEARCH_PRICE_MIN_DEFAULT || priceRange[1] < SEARCH_PRICE_MAX_DEFAULT) && (
                       <Badge variant="secondary" className="gap-1 text-[11px]">
                         {formatPrice(priceRange[0], currency)}–{formatPrice(priceRange[1], currency)}
-                        <button onClick={() => setPriceRange([0, 100000])} aria-label="clear price"><X className="h-3 w-3" /></button>
+                        <button onClick={() => setPriceRange([SEARCH_PRICE_MIN_DEFAULT, SEARCH_PRICE_MAX_DEFAULT])} aria-label="clear price"><X className="h-3 w-3" /></button>
                       </Badge>
                     )}
                     {condition && (
@@ -278,7 +342,7 @@ const SearchResults = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><span className="text-xs font-medium text-muted-foreground">{t("search.priceRange")}</span><span className="text-xs text-muted-foreground">{formatPrice(priceRange[0], currency)} — {formatPrice(priceRange[1], currency)}</span></div>
-                <Slider min={0} max={100000} step={100} value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} className="py-2" />
+                <Slider min={SEARCH_PRICE_MIN_DEFAULT} max={SEARCH_PRICE_MAX_DEFAULT} step={100} value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} className="py-2" />
               </div>
               {hasActiveFilters && (<button onClick={clearFilters} className="text-xs text-primary hover:underline">{t("search.clearFilters")}</button>)}
             </motion.div>
@@ -288,7 +352,7 @@ const SearchResults = () => {
         <div className="sticky top-14 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 mb-5 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border-b border-border/40 py-3 flex items-center justify-between">
           <h1 className="font-display text-base sm:text-xl font-bold truncate pr-2">{query ? t("search.resultsFor", { query }) : t("search.title")}</h1>
           <div className="flex items-center gap-3 shrink-0">
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SearchSortOption)}>
               <SelectTrigger className="w-[130px] h-8 text-xs bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="relevance">{t("search.relevance")}</SelectItem>
@@ -330,8 +394,26 @@ const SearchResults = () => {
         {usedFallback && (
           <p className="text-xs text-muted-foreground mb-3 text-center">{t("search.fallbackUsed")}</p>
         )}
-        {isLoading && (<div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>)}
-        {!isLoading && finalResults && finalResults.length === 0 && (
+        {isLoading && !showFirstPageError && (<div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>)}
+        {showFirstPageError && (
+          <div className="py-16 flex flex-col items-center gap-3">
+            <p className="text-sm text-muted-foreground text-center">
+              {t("search.loadFailed", "Could not load listings.")}
+            </p>
+            <Button
+              type="button"
+              variant="gold-outline"
+              size="sm"
+              onClick={retryInitialSearch}
+              disabled={isFetching || initialRetrying}
+              className="gap-2"
+            >
+              {isFetching || initialRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {t("search.retryLoad", "Retry")}
+            </Button>
+          </div>
+        )}
+        {!isLoading && !showFirstPageError && finalResults && finalResults.length === 0 && (
           <div className="text-center py-16 space-y-4">
             <SearchX className="h-12 w-12 mx-auto text-muted-foreground/40" />
             <div>
@@ -355,8 +437,10 @@ const SearchResults = () => {
             )}
           </div>
         )}
-        {!isLoading && query.length < 2 && !hasActiveFilters && (<div className="text-center py-20"><Search className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" /><p className="text-muted-foreground">{t("search.minChars")}</p></div>)}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{finalResults?.map((p, i) => (<ProductCard key={p.id} product={mapProduct(p)} index={i} imageSize="thumb" />))}</div>
+        {!isLoading && !showFirstPageError && query.length < 2 && !hasActiveFilters && (<div className="text-center py-20"><Search className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" /><p className="text-muted-foreground">{t("search.minChars")}</p></div>)}
+        {!showFirstPageError && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{finalResults?.map((p, i) => (<ProductCard key={p.id} product={mapProduct(p)} index={i} imageSize="thumb" />))}</div>
+        )}
 
         {showingInfinite && (
           <div className="py-8 flex flex-col items-center gap-3">

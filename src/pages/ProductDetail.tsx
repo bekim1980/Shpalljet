@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProduct } from "@/hooks/useProducts";
+import { searchPathForCategoryId } from "@/lib/searchUrlParams";
 import { useSellerRating } from "@/hooks/useReviews";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
@@ -620,7 +620,7 @@ const ProductDetail = () => {
                 {t("product.relatedListings", "Similar Listings")}
               </h2>
               <Link
-                to={`/search?category=${product.category}`}
+                to={searchPathForCategoryId(dbProduct.category_id)}
                 className="text-xs text-primary hover:underline inline-flex items-center gap-0.5"
               >
                 {t("product.viewAll", "View all")}

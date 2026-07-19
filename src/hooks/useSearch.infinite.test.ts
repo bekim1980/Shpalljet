@@ -51,6 +51,17 @@ describe("search query helpers", () => {
     expect(isSearchEnabled({ query: "", categoryId: "cat-1" })).toBe(true);
   });
 
+  it("enables search for location-only filters", () => {
+    expect(isSearchEnabled({ query: "", location: "Prishtinë" })).toBe(true);
+    expect(isSearchEnabled({ query: "", location: "  Tirana  " })).toBe(true);
+  });
+
+  it("does not enable search for whitespace-only location", () => {
+    expect(isSearchEnabled({ query: "", location: "" })).toBe(false);
+    expect(isSearchEnabled({ query: "", location: "   " })).toBe(false);
+    expect(isSearchEnabled({ query: "a", location: "  " })).toBe(false);
+  });
+
   it("omits pagination from the query key so filter changes reset pages", () => {
     const key = searchProductsQueryKey({
       query: "phone",
