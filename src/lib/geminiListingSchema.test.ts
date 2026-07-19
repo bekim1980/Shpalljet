@@ -46,4 +46,29 @@ describe("parseGeminiListingJson", () => {
     });
     expect(result.keywords).toEqual(["leather", "vintage", "jacket"]);
   });
+
+  it("defaults missing attributes to empty object", () => {
+    const result = parseGeminiListingJson(validListing);
+    expect(result.attributes).toEqual({});
+  });
+
+  it("parses attributes object map", () => {
+    const result = parseGeminiListingJson({
+      ...validListing,
+      attributes: { size: "M", color: "E kaftë", invent: "x", empty: "" },
+    });
+    expect(result.attributes).toEqual({ size: "M", color: "E kaftë", invent: "x" });
+  });
+
+  it("parses attributes as key/value array", () => {
+    const result = parseGeminiListingJson({
+      ...validListing,
+      attributes: [
+        { key: "storage", value: "256 GB" },
+        { key: "color", value: "Unknown" },
+        { key: "", value: "skip" },
+      ],
+    });
+    expect(result.attributes).toEqual({ storage: "256 GB" });
+  });
 });

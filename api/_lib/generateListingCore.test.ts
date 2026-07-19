@@ -71,6 +71,13 @@ describe("GEMINI_LISTING_SYSTEM_INSTRUCTION", () => {
     expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"seo_title"');
     expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"price_estimate"');
     expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"features": []');
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain('"attributes": {}');
+  });
+
+  it("requires category-specific attributes from catalog keys", () => {
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toMatch(/CATEGORY-SPECIFIC ATTRIBUTES/i);
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("electronics-phones:");
+    expect(GEMINI_LISTING_SYSTEM_INSTRUCTION).toContain("Never guess or invent attribute values");
   });
 
   it("requires zero hallucinations and visible-only facts", () => {

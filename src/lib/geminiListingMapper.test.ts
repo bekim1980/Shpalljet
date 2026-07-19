@@ -6,7 +6,7 @@ const sample: GeminiListingResult = {
   seo_title: "iPhone 13 Pro",
   marketplace_title: "Apple iPhone 13 Pro 128GB",
   category: "electronics",
-  subcategory: "phones",
+  subcategory: "electronics-phones",
   brand: "Apple",
   model: "iPhone 13 Pro",
   condition: "like-new",
@@ -20,6 +20,11 @@ const sample: GeminiListingResult = {
   meta_description: "Like-new iPhone 13 Pro available.",
   image_alt_text: "Graphite iPhone 13 Pro",
   price_estimate: "650 EUR",
+  attributes: {
+    storage: "128 GB",
+    color: "E zezë",
+    invent_me: "should drop",
+  },
 };
 
 describe("applyGeminiListingToDraft", () => {
@@ -31,6 +36,14 @@ describe("applyGeminiListingToDraft", () => {
     expect(draft.price).toBe("650");
     expect(draft.categoryId).toBe("cat-123");
     expect(draft.description).toContain(sample.description);
+  });
+
+  it("appends sanitized category attributes as specifications", () => {
+    const draft = applyGeminiListingToDraft(sample, "cat-123");
+    expect(draft.description).toContain("Specifications:");
+    expect(draft.description).toContain("storage: 128 GB");
+    expect(draft.description).toContain("color: E zezë");
+    expect(draft.description).not.toContain("invent_me");
   });
 
   it("skips Unknown brand", () => {
@@ -45,6 +58,8 @@ describe("geminiListingToAnalysis", () => {
     expect(analysis.title).toBe(sample.marketplace_title);
     expect(analysis.brand).toBe("Apple");
     expect(analysis.tags).toContain("iphone");
-    expect(analysis.attributes.some((a) => a.key === "color")).toBe(true);
+    expect(analysis.attributes.some((a) => a.key === "color" && a.value === "E zezë")).toBe(true);
+    expect(analysis.attributes.some((a) => a.key === "storage")).toBe(true);
+    expect(analysis.attributes.some((a) => a.key === "invent_me")).toBe(false);
   });
 });

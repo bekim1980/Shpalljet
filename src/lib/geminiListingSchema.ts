@@ -13,6 +13,31 @@ const stringArrayField = z.preprocess((v) => {
   return [] as string[];
 }, z.array(z.string()));
 
+/** Accept object map or [{key,value}] arrays; drop empty/Unknown values. */
+const attributesField = z.preprocess((v) => {
+  if (v == null || v === "") return {};
+  const out: Record<string, string> = {};
+  if (Array.isArray(v)) {
+    for (const item of v) {
+      if (!item || typeof item !== "object") continue;
+      const rec = item as Record<string, unknown>;
+      const k = String(rec.key ?? "").trim();
+      const val = String(rec.value ?? "").trim();
+      if (k && val && val.toLowerCase() !== "unknown") out[k] = val;
+    }
+    return out;
+  }
+  if (typeof v === "object") {
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      const key = k.trim();
+      const s = val == null ? "" : String(val).trim();
+      if (key && s && s.toLowerCase() !== "unknown") out[key] = s;
+    }
+    return out;
+  }
+  return {};
+}, z.record(z.string()));
+
 export const GeminiListingSchema = z.object({
   seo_title: stringField,
   marketplace_title: stringField,
@@ -31,6 +56,8 @@ export const GeminiListingSchema = z.object({
   meta_description: stringField,
   image_alt_text: stringField,
   price_estimate: stringField,
+  /** Category-specific specs; keys must match the selected category's attribute keys. */
+  attributes: attributesField.optional().default({}),
 });
 
 export type GeminiListingResult = z.infer<typeof GeminiListingSchema>;

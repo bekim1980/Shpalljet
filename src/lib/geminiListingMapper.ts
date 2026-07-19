@@ -1,6 +1,7 @@
 import { VERTICAL_CATEGORIES } from "@/data/verticalConfig";
 import type { Vertical } from "@/contexts/VerticalContext";
 import type { DraftData } from "@/hooks/useDraftListing";
+import { sanitizeCategoryAttributes } from "@/lib/categoryAttributeKeys";
 import type { GeminiListingResult } from "@/lib/geminiListingSchema";
 import type { AiListingAnalysis, AiCondition } from "@/types/aiListing";
 
@@ -44,6 +45,14 @@ function parsePriceEstimate(estimate: string): string {
   return first;
 }
 
+function listingAttributes(listing: GeminiListingResult): Record<string, string> {
+  return sanitizeCategoryAttributes(
+    listing.attributes ?? {},
+    listing.category,
+    listing.subcategory,
+  );
+}
+
 /** Map Gemini SEO listing JSON → sell draft fields. */
 export function applyGeminiListingToDraft(
   listing: GeminiListingResult,
@@ -52,11 +61,16 @@ export function applyGeminiListingToDraft(
   const vertical = guessVertical(listing.category, listing.subcategory);
   const condition = normalizeCondition(listing.condition);
   const price = parsePriceEstimate(listing.price_estimate);
+  const attrs = listingAttributes(listing);
 
   const featureBlock =
     listing.features.length > 0
       ? `\n\nFeatures:\n${listing.features.map((f) => `• ${f}`).join("\n")}`
       : "";
+
+  const attrLines = Object.entries(attrs).map(([k, v]) => `${k}: ${v}`);
+  const specsBlock =
+    attrLines.length > 0 ? `\n\nSpecifications:\n${attrLines.join("\n")}` : "";
 
   const metaBlock = [
     listing.meta_description && listing.meta_description !== "Unknown"
@@ -68,7 +82,7 @@ export function applyGeminiListingToDraft(
     .filter(Boolean)
     .join("");
 
-  const description = [listing.description, featureBlock, metaBlock]
+  const description = [listing.description, featureBlock, specsBlock, metaBlock]
     .join("")
     .trim();
 
@@ -90,9 +104,20 @@ export function geminiListingToAnalysis(listing: GeminiListingResult): AiListing
   const vertical = guessVertical(listing.category, listing.subcategory);
   const condition = normalizeCondition(listing.condition);
   const attrs: Array<{ key: string; value: string; confidence: number }> = [];
+  const structured = listingAttributes(listing);
+  const seen = new Set<string>();
 
-  if (listing.color !== "Unknown") attrs.push({ key: "color", value: listing.color, confidence: 75 });
-  if (listing.model !== "Unknown") attrs.push({ key: "model", value: listing.model, confidence: 70 });
+  for (const [key, value] of Object.entries(structured)) {
+    attrs.push({ key, value, confidence: 72 });
+    seen.add(key);
+  }
+
+  if (listing.color !== "Unknown" && !seen.has("color")) {
+    attrs.push({ key: "color", value: listing.color, confidence: 75 });
+  }
+  if (listing.model !== "Unknown" && !seen.has("model")) {
+    attrs.push({ key: "model", value: listing.model, confidence: 70 });
+  }
   listing.features.forEach((f) => attrs.push({ key: "feature", value: f, confidence: 65 }));
 
   return {
