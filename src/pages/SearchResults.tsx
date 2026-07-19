@@ -1,11 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/contexts/LocaleContext";
-import { formatPrice, COUNTRIES } from "@/lib/currency";
+import { formatPrice } from "@/lib/currency";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
-import { useSearchProducts } from "@/hooks/useSearch";
+import {
+  dedupeProductsById,
+  useInfiniteSearchProducts,
+  useSearchProducts,
+} from "@/hooks/useSearch";
 import { useCategories } from "@/hooks/useCategories";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +24,6 @@ import { Bell, BellOff, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useFindSavedSearch, useCreateSavedSearch, useToggleSavedSearch } from "@/hooks/useSavedSearches";
 import { toast } from "sonner";
-import { useEffect } from "react";
 import { track } from "@/lib/analytics";
 
 const TRENDING_SUGGESTIONS = ["iPhone", "Apartment Tirana", "Rolex", "Office desk", "Bicycle"];
@@ -65,7 +68,63 @@ const SearchResults = () => {
     priceMax: priceRange[1] < 100000 ? priceRange[1] : undefined, sortBy,
   }), [query, categoryId, condition, location, priceRange, sortBy]);
 
-  const { data: results, isLoading } = useSearchProducts(filters);
+  const {
+    data: infiniteData,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    isFetchNextPageError,
+  } = useInfiniteSearchProducts(filters);
+
+  const results = useMemo(
+    () => dedupeProductsById(infiniteData?.pages.flat() ?? []),
+    [infiniteData],
+  );
+
+  const loadLockRef = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const loadNextPage = useCallback(() => {
+    if (
+      loadLockRef.current ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      isFetchNextPageError ||
+      isLoading
+    ) {
+      return;
+    }
+    loadLockRef.current = true;
+    void fetchNextPage().finally(() => {
+      loadLockRef.current = false;
+    });
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError, isLoading]);
+
+  const retryFailedPage = useCallback(() => {
+    if (loadLockRef.current || isFetchingNextPage) return;
+    loadLockRef.current = true;
+    void fetchNextPage().finally(() => {
+      loadLockRef.current = false;
+    });
+  }, [fetchNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadNextPage();
+        }
+      },
+      { root: null, rootMargin: "240px 0px", threshold: 0 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [loadNextPage]);
 
   // Saved search controls
   const savedFilters = {
@@ -103,12 +162,13 @@ const SearchResults = () => {
 
   // Fallback: if AI-filtered search yields 0 results, retry keyword-only
   const hasAiFilters = !!(condition || location || priceRange[0] > 0 || priceRange[1] < 100000);
-  const fallbackEnabled = !!aiInterpretation && !isLoading && results?.length === 0 && hasAiFilters;
+  const fallbackEnabled = !!aiInterpretation && !isLoading && results.length === 0 && hasAiFilters;
   const { data: fallbackResults } = useSearchProducts(
     fallbackEnabled ? { query, sortBy: "relevance" } : { query: "" }
   );
-  const finalResults = (results && results.length > 0) ? results : (fallbackEnabled ? fallbackResults : results);
+  const finalResults = (results.length > 0) ? results : (fallbackEnabled ? (fallbackResults ?? []) : results);
   const usedFallback = fallbackEnabled && (fallbackResults?.length ?? 0) > 0;
+  const showingInfinite = !usedFallback && results.length > 0;
 
   const hasActiveFilters = !!(categoryId || condition || location || priceRange[0] > 0 || priceRange[1] < 100000);
   const clearFilters = () => { setCategoryId(""); setCondition(""); setLocation(""); setPriceRange([0, 100000]); };
@@ -297,6 +357,44 @@ const SearchResults = () => {
         )}
         {!isLoading && query.length < 2 && !hasActiveFilters && (<div className="text-center py-20"><Search className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" /><p className="text-muted-foreground">{t("search.minChars")}</p></div>)}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{finalResults?.map((p, i) => (<ProductCard key={p.id} product={mapProduct(p)} index={i} imageSize="thumb" />))}</div>
+
+        {showingInfinite && (
+          <div className="py-8 flex flex-col items-center gap-3">
+            {isFetchNextPageError ? (
+              <>
+                <p className="text-sm text-muted-foreground text-center">
+                  {t("search.loadMoreFailed", "Could not load more listings.")}
+                </p>
+                <Button
+                  type="button"
+                  variant="gold-outline"
+                  size="sm"
+                  onClick={retryFailedPage}
+                  disabled={isFetchingNextPage}
+                  className="gap-2"
+                >
+                  {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {t("search.retryLoad", "Retry")}
+                </Button>
+              </>
+            ) : (
+              <>
+                {isFetchingNextPage && (
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" aria-label={t("common.loading")} />
+                )}
+                {!hasNextPage && !isFetchingNextPage && (
+                  <p className="text-sm text-muted-foreground">
+                    {t("search.noMoreListings", "No more listings")}
+                  </p>
+                )}
+                {/* Sentinel: observed for automatic next-page loads */}
+                {hasNextPage && !isFetchNextPageError && (
+                  <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Back-to-top FAB */}
