@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/hooks/useAuth";
+import { PAYMENTS_ENABLED } from "@/config/features";
 import { CATALOG_DISPLAY, type EntitlementTypeId } from "@/lib/entitlementCatalogDisplay";
 import { CheckoutAuthError, CheckoutConfigError, redirectToCheckout } from "@/lib/createCheckoutSession";
 
@@ -43,6 +44,8 @@ const BoostDialog = ({ productId, productTitle, trigger, currentBoostExpiresAt }
   const [step, setStep] = useState<"choose" | "confirm">("choose");
   const [isPending, setIsPending] = useState(false);
   const { session } = useAuth();
+
+  if (!PAYMENTS_ENABLED) return null;
 
   const activeUntil = currentBoostExpiresAt && new Date(currentBoostExpiresAt) > new Date()
     ? currentBoostExpiresAt

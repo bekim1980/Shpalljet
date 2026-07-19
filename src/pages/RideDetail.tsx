@@ -13,6 +13,7 @@ import { useStartConversation } from "@/hooks/useChat";
 import { getMutationErrorMessage } from "@/lib/accountRestriction";
 import { supabase } from "@/integrations/supabase/client";
 import { isLeavingSoon, isPopularRoute, seatsBadgeVariant } from "@/lib/rideHelpers";
+import { PAYMENTS_ENABLED } from "@/config/features";
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString(undefined, {
@@ -158,8 +159,8 @@ export default function RideDetail() {
               </div>
             )}
 
-            {/* Owner-only Boost (UI only) */}
-            {isOwn && (
+            {/* Owner-only Boost (UI only) — hidden while payments are shut down */}
+            {isOwn && PAYMENTS_ENABLED && (
               <button
                 onClick={handleBoost}
                 className="w-full mt-3 rounded-2xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors p-4 text-left"

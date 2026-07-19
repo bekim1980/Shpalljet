@@ -24,7 +24,7 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Browse",
-    caption: "Premium listings across verticals",
+    caption: "Listings across all verticals",
     icon: <Store className="h-4 w-4" />,
     accent: "from-gold-light/30 to-transparent",
     image: browseShot,

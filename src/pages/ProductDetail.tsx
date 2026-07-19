@@ -29,6 +29,7 @@ import ImageCarousel from "@/components/product/ImageCarousel";
 import MakeOfferDialog from "@/components/product/MakeOfferDialog";
 import FullscreenViewer from "@/components/product/FullscreenViewer";
 import BoostDialog from "@/components/product/BoostDialog";
+import { PAYMENTS_ENABLED } from "@/config/features";
 import { useTrackProductView } from "@/hooks/useProductViews";
 import { useCheckoutReturn } from "@/hooks/useCheckoutReturn";
 import { toast } from "sonner";
@@ -497,8 +498,8 @@ const ProductDetail = () => {
               )}
             </motion.div>
 
-            {/* ── Owner-only: Boost listing CTA ── */}
-            {user?.id === product.seller.id && (
+            {/* ── Owner-only: Boost listing CTA (purchase) or active boost status ── */}
+            {user?.id === product.seller.id && PAYMENTS_ENABLED && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">🚀 Boost this listing</p>
@@ -513,6 +514,14 @@ const ProductDetail = () => {
                   productTitle={product.title}
                   currentBoostExpiresAt={product.boostExpiresAt}
                 />
+              </div>
+            )}
+            {user?.id === product.seller.id && !PAYMENTS_ENABLED && product.isBoosted && product.boostExpiresAt && new Date(product.boostExpiresAt) > new Date() && (
+              <div className="rounded-lg border border-border/40 bg-secondary/20 p-3">
+                <p className="text-sm font-medium">{t("sell.boosted")}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Boost active until {new Date(product.boostExpiresAt).toLocaleDateString()}
+                </p>
               </div>
             )}
 

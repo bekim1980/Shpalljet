@@ -19,6 +19,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { formatPrice, type CurrencyCode } from "@/lib/currency";
 import { buildFreeRenewalUpdates } from "@/lib/entitlementSecurity";
 import { useAuth } from "@/hooks/useAuth";
+import { PAYMENTS_ENABLED } from "@/config/features";
 import { CheckoutAuthError, CheckoutConfigError, redirectToCheckout } from "@/lib/createCheckoutSession";
 import { CATALOG_DISPLAY } from "@/lib/entitlementCatalogDisplay";
 
@@ -254,16 +255,23 @@ const MyListings = () => {
                     </span>
                   )}
                 </div>
-                {/* Auto-renew toggle */}
+                {/* Auto-renew: purchase control when payments on; read-only if already entitled */}
                 {!isExpired && product.status === "active" && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Switch
-                      checked={(product as any).auto_renew ?? false}
-                      onCheckedChange={(checked) => toggleAutoRenew(product, checked)}
-                      className="scale-75 origin-left"
-                    />
-                    <span className="text-[10px] text-muted-foreground">{t("sell.autoRenew")}</span>
-                  </div>
+                  PAYMENTS_ENABLED ? (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Switch
+                        checked={(product as any).auto_renew ?? false}
+                        onCheckedChange={(checked) => toggleAutoRenew(product, checked)}
+                        className="scale-75 origin-left"
+                      />
+                      <span className="text-[10px] text-muted-foreground">{t("sell.autoRenew")}</span>
+                    </div>
+                  ) : (product as any).auto_renew ? (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">{t("sell.autoRenew")}</span>
+                    </div>
+                  ) : null
                 )}
               </div>
               <div className="flex gap-1 shrink-0">
@@ -276,17 +284,19 @@ const MyListings = () => {
                     >
                       {renewingId === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RotateCcw className="h-3 w-3" />7d</>}
                     </button>
-                    <button
-                      onClick={() => handleRenew(product, "paid")}
-                      disabled={renewingId === product.id}
-                      className="px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-[10px] font-medium text-primary transition-colors flex items-center gap-1"
-                    >
-                      {renewingId === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3" />{CATALOG_DISPLAY.premium_renew.durationLabel}</>}
-                    </button>
+                    {PAYMENTS_ENABLED && (
+                      <button
+                        onClick={() => handleRenew(product, "paid")}
+                        disabled={renewingId === product.id}
+                        className="px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-[10px] font-medium text-primary transition-colors flex items-center gap-1"
+                      >
+                        {renewingId === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3" />{CATALOG_DISPLAY.premium_renew.durationLabel}</>}
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <>
-                    {!product.is_boosted && (
+                    {PAYMENTS_ENABLED && !product.is_boosted && (
                       <BoostDialog
                         productId={product.id}
                         productTitle={product.title}
