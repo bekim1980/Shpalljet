@@ -69,12 +69,14 @@ const ImageUploader = ({ images, previews, maxImages = 5, onImagesChange }: Imag
 
       {/* Drop zone */}
       {images.length < maxImages && (
-        <div
+        <button
+          type="button"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={() => setDragOver(false)}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          aria-label={`Shto foto (deri në ${maxImages})`}
+          className={`w-full border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
             dragOver
               ? "border-primary bg-primary/5"
               : "border-border hover:border-primary/50"
@@ -82,12 +84,9 @@ const ImageUploader = ({ images, previews, maxImages = 5, onImagesChange }: Imag
         >
           <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">
-            Tërhiqni fotot këtu ose klikoni për të zgjedhur
+            Kliko ose tërhiq fotot këtu
           </p>
-          <p className="text-xs text-muted-foreground/60 mt-1">
-            {images.length}/{maxImages} foto të ngarkuara
-          </p>
-        </div>
+        </button>
       )}
 
       {/* Previews */}
@@ -114,18 +113,19 @@ const ImageUploader = ({ images, previews, maxImages = 5, onImagesChange }: Imag
                 </span>
               )}
 
-              {/* Grip handle */}
-              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Grip handle — hover-only on devices that support hover */}
+              <div className="absolute top-1 left-1 opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity">
                 <GripVertical className="h-4 w-4 text-foreground/80 drop-shadow" />
               </div>
 
-              {/* Remove button */}
+              {/* Remove — always visible on touch; hover-reveal on fine pointers */}
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Hiq foton"
+                className="absolute top-1 right-1 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity"
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           ))}
@@ -135,6 +135,7 @@ const ImageUploader = ({ images, previews, maxImages = 5, onImagesChange }: Imag
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
+              aria-label="Shto foto"
               className="w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
             >
               <Camera className="h-5 w-5 text-muted-foreground" />
@@ -150,6 +151,8 @@ const ImageUploader = ({ images, previews, maxImages = 5, onImagesChange }: Imag
         accept="image/*"
         multiple
         className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
         onChange={(e) => {
           const files = Array.from(e.target.files || []);
           addFiles(files);

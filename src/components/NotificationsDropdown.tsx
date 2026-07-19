@@ -24,7 +24,7 @@ const NotificationsDropdown = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t("notifications.title")}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (<span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{unreadCount > 9 ? "9+" : unreadCount}</span>)}
         </Button>

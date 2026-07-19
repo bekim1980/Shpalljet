@@ -69,8 +69,18 @@ const Sell = () => {
   const { generateFromImages, loading: aiGenerating, error: aiGenerateError } =
     useListingAiGeneration(categoryIdForSlug);
   const { restriction, isRestricted } = useAccountRestriction();
+  const submitLockRef = useRef(false);
 
-  if (authLoading) return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex justify-center py-20" aria-busy="true">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label={t("common.loading")} />
+        </div>
+      </div>
+    );
+  }
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -144,11 +154,21 @@ const Sell = () => {
 
   const handleSubmit = async (e?: React.FormEvent, aiMeta?: AiListingAnalysis | null, missingAnswers?: Record<string, string>) => {
     e?.preventDefault();
+    if (submitLockRef.current || submitting) return;
     if (isRestricted) {
       toast.error(restriction!.message);
       return;
     }
-    if (!validate({ fromAi: !!aiMeta })) { toast.error(t("sell.fillRequired")); return; }
+    if (!validate({ fromAi: !!aiMeta })) {
+      toast.error(t("sell.fillRequired"));
+      requestAnimationFrame(() => {
+        const firstError = document.querySelector<HTMLElement>("[data-field-error], [aria-invalid='true'], .text-destructive");
+        firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+        firstError?.focus?.();
+      });
+      return;
+    }
+    submitLockRef.current = true;
     setSubmitting(true);
     const wantsPremium = PAYMENTS_ENABLED && draft.listingType === "paid";
     try {
@@ -185,6 +205,7 @@ const Sell = () => {
 
       if (draft.selectedVertical !== "jobs" && imageUrls.length === 0) {
         toast.error(t("sell.imageUploadFailed", "Ngarkimi i fotos dështoi."));
+        submitLockRef.current = false;
         setSubmitting(false);
         return;
       }
@@ -265,12 +286,17 @@ const Sell = () => {
 
       toast.success(t("sell.listingSuccess"));
       navigate(`/product/${inserted.id}`);
-    } catch (err: any) { toast.error(err.message || t("sell.listingFailed")); } finally { setSubmitting(false); }
+    } catch (err: any) { toast.error(err.message || t("sell.listingFailed")); } finally { submitLockRef.current = false; setSubmitting(false); }
   };
 
   const v = draft.selectedVertical;
   const categories = v ? VERTICAL_CATEGORIES[v] : [];
-  const FieldError = ({ field }: { field: string }) => errors[field] ? <p className="text-xs text-destructive mt-1">{errors[field]}</p> : null;
+  const FieldError = ({ field }: { field: string }) =>
+    errors[field] ? (
+      <p className="text-xs text-destructive mt-1" role="alert" data-field-error={field}>
+        {errors[field]}
+      </p>
+    ) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -323,7 +349,7 @@ const Sell = () => {
             {/* Section picker */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">{t("sell.section")} *</Label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {VERTICALS.map((vert) => {
                   const Icon = verticalIcons[vert.value];
                   const selected = v === vert.value;
@@ -433,7 +459,7 @@ const Sell = () => {
                   <Label htmlFor="price">{t("sell.price")} *</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="price" type="number" step="0.01" min="0" placeholder="0.00" className="pl-9 bg-secondary/50" value={draft.price} onChange={(e) => updateDraft({ price: e.target.value })} />
+                    <Input id="price" type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" className="pl-9 bg-secondary/50" value={draft.price} onChange={(e) => updateDraft({ price: e.target.value })} />
                   </div>
                   <FieldError field="price" />
                 </div>
@@ -464,7 +490,7 @@ const Sell = () => {
                   <Label htmlFor="price">{t("sell.startingPrice")}</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="price" type="number" step="0.01" min="0" placeholder="0.00" className="pl-9 bg-secondary/50" value={draft.price} onChange={(e) => updateDraft({ price: e.target.value })} />
+                    <Input id="price" type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" className="pl-9 bg-secondary/50" value={draft.price} onChange={(e) => updateDraft({ price: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -578,11 +604,11 @@ const Sell = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="salaryMin">{t("sell.salaryMin", "Salary min")}</Label>
-                    <Input id="salaryMin" type="number" min="0" step="0.01" className="bg-secondary/50" value={draft.salaryMin} onChange={(e) => updateDraft({ salaryMin: e.target.value })} />
+                    <Input id="salaryMin" type="number" inputMode="decimal" min="0" step="0.01" className="bg-secondary/50" value={draft.salaryMin} onChange={(e) => updateDraft({ salaryMin: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="salaryMax">{t("sell.salaryMax", "Salary max")}</Label>
-                    <Input id="salaryMax" type="number" min="0" step="0.01" className="bg-secondary/50" value={draft.salaryMax} onChange={(e) => updateDraft({ salaryMax: e.target.value })} />
+                    <Input id="salaryMax" type="number" inputMode="decimal" min="0" step="0.01" className="bg-secondary/50" value={draft.salaryMax} onChange={(e) => updateDraft({ salaryMax: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-2">

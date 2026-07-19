@@ -104,10 +104,11 @@ const Homepage = () => {
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
-                  type="text"
+                  type="search"
                   placeholder={t("homepage.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label={t("homepage.searchPlaceholder")}
                   className="w-full h-12 pl-12 pr-4 rounded-full bg-card/60 backdrop-blur-md border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all text-sm"
                 />
                 {searchQuery.trim().length >= 2 && (

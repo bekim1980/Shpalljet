@@ -314,25 +314,34 @@ const SearchResults = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder={t("search.searchPlaceholder")} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9 h-11 bg-secondary/60 border-border/50" />
-              {query && (<button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>)}
+              {query && (<button type="button" onClick={() => setQuery("")} aria-label={t("search.clearQuery", "Clear search")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>)}
             </div>
-            <Button variant={showFilters ? "gold" : "gold-outline"} size="icon" className="h-11 w-11 shrink-0" onClick={() => setShowFilters(!showFilters)}><SlidersHorizontal className="h-4 w-4" /></Button>
+            <Button
+              variant={showFilters ? "gold" : "gold-outline"}
+              size="icon"
+              className="h-11 w-11 shrink-0"
+              onClick={() => setShowFilters(!showFilters)}
+              aria-label={t("search.filters", "Filters")}
+              aria-expanded={showFilters}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </Button>
           </div>
           {showFilters && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 glass-card rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">{t("search.category")}</label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
+                  <Select value={categoryId || "__all__"} onValueChange={(v) => setCategoryId(v === "__all__" ? "" : v)}>
                     <SelectTrigger className="bg-secondary/50 h-9 text-sm"><SelectValue placeholder={t("search.allCategories")} /></SelectTrigger>
-                    <SelectContent><SelectItem value="">{t("search.allCategories")}</SelectItem>{categories?.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}</SelectContent>
+                    <SelectContent><SelectItem value="__all__">{t("search.allCategories")}</SelectItem>{categories?.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">{t("search.condition")}</label>
-                  <Select value={condition} onValueChange={setCondition}>
+                  <Select value={condition || "__all__"} onValueChange={(v) => setCondition(v === "__all__" ? "" : v)}>
                     <SelectTrigger className="bg-secondary/50 h-9 text-sm"><SelectValue placeholder={t("search.allConditions")} /></SelectTrigger>
-                    <SelectContent><SelectItem value="">{t("search.allConditions")}</SelectItem><SelectItem value="new">{t("search.conditionNew")}</SelectItem><SelectItem value="like-new">{t("search.conditionLikeNew")}</SelectItem><SelectItem value="good">{t("search.conditionGood")}</SelectItem><SelectItem value="used">{t("search.conditionUsed")}</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="__all__">{t("search.allConditions")}</SelectItem><SelectItem value="new">{t("search.conditionNew")}</SelectItem><SelectItem value="like-new">{t("search.conditionLikeNew")}</SelectItem><SelectItem value="good">{t("search.conditionGood")}</SelectItem><SelectItem value="used">{t("search.conditionUsed")}</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
@@ -349,7 +358,7 @@ const SearchResults = () => {
           )}
         </div>
         {/* Sticky filter / sort bar — keeps controls reachable while scrolling */}
-        <div className="sticky top-14 z-30 -mx-4 sm:mx-0 px-4 sm:px-0 mb-5 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border-b border-border/40 py-3 flex items-center justify-between">
+        <div className="sticky top-[calc(4rem+env(safe-area-inset-top,0px))] z-30 -mx-4 sm:mx-0 px-4 sm:px-0 mb-5 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border-b border-border/40 py-3 flex items-center justify-between">
           <h1 className="font-display text-base sm:text-xl font-bold truncate pr-2">{query ? t("search.resultsFor", { query }) : t("search.title")}</h1>
           <div className="flex items-center gap-3 shrink-0">
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SearchSortOption)}>

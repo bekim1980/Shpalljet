@@ -189,7 +189,7 @@ const ProductCard = ({ product, index, imageSize = "card" }: { product: ProductC
               aria-pressed={isWished}
               data-testid={`wishlist-toggle-${product.id}`}
               data-state={isWished ? "active" : "inactive"}
-              className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+              className="p-2.5 min-h-10 min-w-10 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
             >
               <Heart className={`h-4 w-4 transition-colors ${isWished ? "fill-primary text-primary" : "text-foreground/70"}`} />
             </button>

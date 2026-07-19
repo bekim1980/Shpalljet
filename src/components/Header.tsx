@@ -38,7 +38,7 @@ const Header = () => {
           {/* Language / Region Switcher */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label={t("header.language")}>
                 <Globe className="h-5 w-5" />
               </Button>
             </PopoverTrigger>
@@ -100,7 +100,7 @@ const Header = () => {
             <>
               <NotificationsDropdown />
               <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
-                <Link to="/messages">
+                <Link to="/messages" aria-label={t("header.messages", "Messages")}>
                   <MessageCircle className="h-5 w-5" />
                   {messageUnreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
@@ -110,32 +110,32 @@ const Header = () => {
                 </Link>
               </Button>
               <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex h-9 w-9">
-                <Link to="/orders">
+                <Link to="/orders" aria-label={t("header.orders", "Orders")}>
                   <Package className="h-5 w-5" />
                 </Link>
               </Button>
               <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex h-9 w-9">
-                <Link to="/analytics">
+                <Link to="/analytics" aria-label={t("header.analytics", "Analytics")}>
                   <BarChart3 className="h-5 w-5" />
                 </Link>
               </Button>
               <Button variant="ghost" size="icon" asChild>
-                <Link to="/profile">
+                <Link to="/profile" aria-label={t("header.profile", "Profile")}>
                   <User className="h-5 w-5" />
                 </Link>
               </Button>
               {isAdmin && (
                 <Button variant="ghost" size="icon" asChild>
-                  <Link to="/admin">
+                  <Link to="/admin" aria-label={t("header.admin", "Admin")}>
                     <ShieldCheck className="h-5 w-5" />
                   </Link>
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={signOut}>
+              <Button variant="ghost" size="icon" onClick={signOut} aria-label={t("header.logout", "Log out")}>
                 <LogOut className="h-5 w-5" />
               </Button>
               <Button variant="gold" size="icon" className="rounded-full w-9 h-9 shadow-md" asChild>
-                <Link to="/sell">
+                <Link to="/sell" aria-label={t("header.sell", "Sell")}>
                   <Plus className="h-5 w-5" />
                 </Link>
               </Button>
@@ -160,7 +160,7 @@ const Header = () => {
                 {t("common.login")}
               </Button>
               <Button variant="gold" size="icon" className="rounded-full w-9 h-9 shadow-md" asChild>
-                <Link to="/sell">
+                <Link to="/sell" aria-label={t("header.sell", "Sell")}>
                   <Plus className="h-5 w-5" />
                 </Link>
               </Button>

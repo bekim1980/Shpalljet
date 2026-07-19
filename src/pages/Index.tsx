@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X, ArrowUpDown, ShoppingBag } from "lucide-react";
+import { Search, SlidersHorizontal, X, ArrowUpDown, ShoppingBag, Loader2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
@@ -47,7 +47,7 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
 
-  const { data: dbProducts, isLoading } = useProducts(effectiveVertical);
+  const { data: dbProducts, isLoading, isError, refetch, isFetching } = useProducts(effectiveVertical);
 
   // Debounce search input by 350ms
   useEffect(() => {
@@ -153,10 +153,32 @@ const Index = () => {
             <div className="relative flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder={t("browse.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-secondary/60 border-border/50 focus:border-primary/50" />
-                {searchQuery && (<button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>)}
+                <Input
+                  placeholder={t("browse.searchPlaceholder")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label={t("browse.searchPlaceholder")}
+                  className="pl-9 h-11 bg-secondary/60 border-border/50 focus:border-primary/50"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label={t("browse.clearSearch", "Clear search")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <Button variant={showFilters ? "gold" : "gold-outline"} size="icon" className="h-11 w-11 shrink-0" onClick={() => setShowFilters(!showFilters)}>
+              <Button
+                variant={showFilters ? "gold" : "gold-outline"}
+                size="icon"
+                className="h-11 w-11 shrink-0"
+                onClick={() => setShowFilters(!showFilters)}
+                aria-label={t("browse.filters", "Filters")}
+                aria-expanded={showFilters}
+              >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -221,6 +243,24 @@ const Index = () => {
                 <div className="p-4 space-y-3"><div className="h-4 bg-secondary/50 rounded w-3/4" /><div className="h-5 bg-secondary/50 rounded w-1/3" /></div>
               </div>
             ))}
+          </div>
+        ) : isError ? (
+          <div className="text-center py-20 space-y-4">
+            <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/30" />
+            <p className="font-display text-lg text-muted-foreground">
+              {t("browse.loadFailed", "Could not load listings.")}
+            </p>
+            <Button
+              type="button"
+              variant="gold-outline"
+              size="sm"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+              className="gap-2"
+            >
+              {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {t("common.retry", "Retry")}
+            </Button>
           </div>
         ) : filtered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

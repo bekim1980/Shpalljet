@@ -41,7 +41,22 @@ const TrendingSection = () => {
 
   const hasAny = trending && Object.values(trending).some((arr) => arr.length > 0);
 
-  if (isLoading || !hasAny) return null;
+  if (isLoading) {
+    return (
+      <section className="py-12 md:py-16" aria-busy="true" aria-label="Trending">
+        <div className="container">
+          <div className="h-7 w-32 bg-muted/60 rounded mb-8" />
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-xl bg-muted/50 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasAny) return null;
 
   return (
     <section className="py-12 md:py-16">

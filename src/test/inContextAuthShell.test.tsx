@@ -120,7 +120,7 @@ describe("in-context auth shell wiring (source)", () => {
 
   it("Header Post Listing stays on /sell (ProtectedRoute)", () => {
     const source = readFileSync("src/components/Header.tsx", "utf8");
-    const sellLinks = source.match(/<Link to="\/sell">[\s\S]*?<\/Link>/g) ?? [];
+    const sellLinks = source.match(/<Link to="\/sell"[^>]*>[\s\S]*?<\/Link>/g) ?? [];
     expect(sellLinks.length).toBeGreaterThanOrEqual(1);
     sellLinks.forEach((block) => {
       expect(block).not.toMatch(/openAuthShell/);

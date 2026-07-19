@@ -42,7 +42,6 @@ const AiListingCreator = ({
   onPublish,
   onExit,
   defaultCurrency,
-  locale,
 }: Props) => {
   const { t } = useTranslation();
   const { analyzing, currentStep, stepIndex, totalSteps, analysis, error, analyzeImages, reset } =

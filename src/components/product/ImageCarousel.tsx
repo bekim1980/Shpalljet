@@ -41,7 +41,9 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
         <button
           onPointerDown={onWishlistPointerDown}
           onClick={() => onWishlist()}
-          className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm"
+          aria-label={isWished ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={isWished}
+          className="absolute top-3 right-3 p-2.5 min-h-10 min-w-10 rounded-full bg-background/80 backdrop-blur-sm"
         >
           <Heart className={`h-5 w-5 ${isWished ? "fill-primary text-primary" : "text-foreground/70"}`} />
         </button>
@@ -82,6 +84,8 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
             <button
               key={i}
               onClick={() => scrollToIdx(i)}
+              aria-label={`Go to image ${i + 1}`}
+              aria-current={i === activeIdx ? "true" : undefined}
               className={`h-1.5 rounded-full transition-all ${i === activeIdx ? "bg-white w-3" : "bg-white/50 w-1.5"}`}
             />
           ))}
@@ -93,7 +97,9 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
         <>
           {activeIdx > 0 && (
             <button
+              type="button"
               onClick={() => scrollToIdx(activeIdx - 1)}
+              aria-label="Previous image"
               className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 backdrop-blur-sm shadow-md hover:bg-background transition-colors"
             >
               <ChevronLeft className="h-5 w-5 text-foreground/70" />
@@ -101,7 +107,9 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
           )}
           {activeIdx < images.length - 1 && (
             <button
+              type="button"
               onClick={() => scrollToIdx(activeIdx + 1)}
+              aria-label="Next image"
               className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 backdrop-blur-sm shadow-md hover:bg-background transition-colors"
             >
               <ChevronRight className="h-5 w-5 text-foreground/70" />
@@ -114,7 +122,9 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
       <button
         onPointerDown={onWishlistPointerDown}
         onClick={() => onWishlist()}
-        className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm shadow-md"
+        aria-label={isWished ? "Remove from wishlist" : "Add to wishlist"}
+        aria-pressed={isWished}
+        className="absolute top-3 right-3 p-2.5 min-h-10 min-w-10 rounded-full bg-background/80 backdrop-blur-sm shadow-md"
       >
         <Heart className={`h-5 w-5 transition-colors ${isWished ? "fill-primary text-primary" : "text-foreground/70"}`} />
       </button>
@@ -128,19 +138,21 @@ const ImageCarousel = ({ images, onImageTap, isWished, onWishlist, onWishlistPoi
           {images.map((url, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => scrollToIdx(i)}
+              aria-label={`View image ${i + 1}`}
+              aria-current={i === activeIdx ? "true" : undefined}
               className={`w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all ${
                 i === activeIdx
                   ? "border-primary ring-1 ring-primary/30 opacity-100"
                   : "border-border/30 opacity-60 hover:opacity-90"
               }`}
             >
-              <img
+              <SafeImage
                 src={resolveProductImageUrl(url, "thumb") ?? url}
                 alt=""
                 className="w-full h-full object-cover"
                 loading="lazy"
-                decoding="async"
               />
             </button>
           ))}

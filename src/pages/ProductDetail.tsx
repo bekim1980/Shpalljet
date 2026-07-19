@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Star, MessageCircle, Heart, MapPin, Phone, Clock,
-  Tag, Package, Shield, ChevronRight, Briefcase, Building2, ExternalLink, Mail,
+  ArrowLeft, Star, MessageCircle, MapPin, Phone, Clock,
+  Tag, Package, Shield, ChevronRight, Briefcase, Building2, ExternalLink, Mail, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchPathForCategoryId } from "@/lib/searchUrlParams";
+import { useProduct } from "@/hooks/useProducts";
 import { useSellerRating } from "@/hooks/useReviews";
 import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,7 +38,6 @@ import { formatDistanceToNow } from "date-fns";
 import { track } from "@/lib/analytics";
 import SEO from "@/components/SEO";
 import { extractProductId, buildProductSlug } from "@/lib/productSlug";
-import { SITE_URL } from "@/components/SEO";
 import { getValidSeoImageUrl, buildProductCanonical } from "@/lib/seoImage";
 import { pickValidImageUrls } from "@/lib/productImage";
 
@@ -107,7 +107,7 @@ const ProductDetail = () => {
   ];
 
   const { startConversation } = useStartConversation();
-  const { data: dbProduct, isLoading, isError } = useProduct(id);
+  const { data: dbProduct, isLoading, isError, refetch, isFetching } = useProduct(id);
   const { data: wishlist } = useWishlist();
   const { mutate: toggleWishlist } = useToggleWishlist();
   useTrackProductView(id);
@@ -180,7 +180,33 @@ const ProductDetail = () => {
 
   if (id && isLoading) return <ProductDetailSkeleton />;
 
-  if (!id || isError || !product) {
+  if (id && isError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-20 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+            <Package className="h-7 w-7 text-muted-foreground/40" />
+          </div>
+          <p className="text-muted-foreground font-display text-lg">
+            {t("product.loadFailed", "Could not load this listing.")}
+          </p>
+          <Button
+            type="button"
+            variant="gold-outline"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+            className="gap-2"
+          >
+            {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {t("common.retry", "Retry")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!id || !product) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
