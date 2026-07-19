@@ -2,6 +2,17 @@
 
 Premium and Boost are granted **only** after Stripe webhook verification and `grant_listing_entitlement` (service_role).
 
+## Feature flag
+
+Listing payments are controlled by a single compile-time flag:
+
+`src/config/features.ts` → `PAYMENTS_ENABLED`
+
+- `false` (current): purchase UI is hidden; `POST /api/stripe/create-checkout-session` returns **503** with `"Payments are temporarily disabled"`.
+- `true`: Premium / Boost / paid renew checkout UI and API are active again.
+
+Webhooks, grant/revoke RPCs, entitlement tables, and expiry continue to run either way so existing paid entitlements keep working.
+
 ## Required server environment variables
 
 Set these in **Vercel** (or your API host) and **never** expose them via `VITE_*` or frontend bundles:

@@ -12,6 +12,7 @@ import { useIsAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { getRecordedEvents, track } from "@/lib/analytics";
 import BoostDialog from "@/components/product/BoostDialog";
+import { PAYMENTS_ENABLED } from "@/config/features";
 
 interface ProductRow {
   id: string;
@@ -169,7 +170,9 @@ const Insights = () => {
         out.push({
           type: "high_performer",
           product: p,
-          message: "High converting listing — consider boosting it.",
+          message: PAYMENTS_ENABLED
+            ? "High converting listing — consider boosting it."
+            : "High converting listing — keep photos and details up to date.",
           icon: Flame,
         });
         continue;
@@ -275,7 +278,9 @@ const Insights = () => {
                 const Icon = rec.icon;
                 const ACTION: Record<InsightType, { label: string; kind: "improve" | "boost" | "edit" | "price" }> = {
                   low_conversion: { label: "Improve listing", kind: "improve" },
-                  high_performer: { label: "Boost now", kind: "boost" },
+                  high_performer: PAYMENTS_ENABLED
+                    ? { label: "Boost now", kind: "boost" }
+                    : { label: "Edit listing", kind: "edit" },
                   boost_underperform: { label: "Edit listing", kind: "edit" },
                   favorites_no_contact: { label: "Adjust price", kind: "price" },
                 };

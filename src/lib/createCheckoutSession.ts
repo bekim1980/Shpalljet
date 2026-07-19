@@ -1,3 +1,4 @@
+import { PAYMENTS_DISABLED_MESSAGE, PAYMENTS_ENABLED } from "@/config/features";
 import type { EntitlementTypeId } from "@/lib/entitlementCatalogDisplay";
 
 export class CheckoutConfigError extends Error {
@@ -20,6 +21,9 @@ export async function createCheckoutSession(params: {
   entitlementType: EntitlementTypeId;
   accessToken: string;
 }): Promise<{ url: string; sessionId: string; paymentId: string }> {
+  if (!PAYMENTS_ENABLED) {
+    throw new Error(PAYMENTS_DISABLED_MESSAGE);
+  }
   if (!params.accessToken) {
     throw new CheckoutAuthError();
   }

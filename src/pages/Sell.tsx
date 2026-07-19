@@ -26,7 +26,7 @@ import { useDraftListing } from "@/hooks/useDraftListing";
 import { useCategories } from "@/hooks/useCategories";
 import SmartListingHelper, { type ListingSuggestion } from "@/components/ai/SmartListingHelper";
 import AiListingCreator from "@/components/ai/aiListing/AiListingCreator";
-import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR } from "@/config/features";
+import { ENABLE_AI_ASSISTANT, ENABLE_AI_LISTING_CREATOR, PAYMENTS_ENABLED } from "@/config/features";
 import { useListingAiGeneration } from "@/hooks/useListingAiGeneration";
 import { useAccountRestriction } from "@/hooks/useAccountRestriction";
 import AccountRestrictedBanner from "@/components/AccountRestrictedBanner";
@@ -150,7 +150,7 @@ const Sell = () => {
     }
     if (!validate({ fromAi: !!aiMeta })) { toast.error(t("sell.fillRequired")); return; }
     setSubmitting(true);
-    const wantsPremium = draft.listingType === "paid";
+    const wantsPremium = PAYMENTS_ENABLED && draft.listingType === "paid";
     try {
       await assertAccountCanMutate(user.id);
       let description = draft.description.trim();
@@ -656,44 +656,46 @@ const Sell = () => {
               )}
             </div>
 
-            {/* Listing Type */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("sell.listingType")} *</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => updateDraft({ listingType: "free" })}
-                  className={`p-4 rounded-xl border text-center transition-all ${
-                    draft.listingType === "free"
-                      ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  <Clock className={`h-5 w-5 mx-auto mb-1.5 ${draft.listingType === "free" ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-sm font-display font-bold block ${draft.listingType === "free" ? "text-primary" : "text-foreground"}`}>
-                    {t("sell.freeListing")}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground block mt-1">{t("sell.freeTag")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateDraft({ listingType: "paid" })}
-                  className={`p-4 rounded-xl border text-center transition-all ${
-                    draft.listingType === "paid"
-                      ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  <Sparkles className={`h-5 w-5 mx-auto mb-1.5 ${draft.listingType === "paid" ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-sm font-display font-bold block ${draft.listingType === "paid" ? "text-primary" : "text-foreground"}`}>
-                    {t("sell.paidListing")}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground block mt-1">
-                    {CATALOG_DISPLAY.premium.priceLabel} • {CATALOG_DISPLAY.premium.durationLabel}
-                  </span>
-                </button>
+            {/* Listing Type — Premium purchase option only when payments are enabled */}
+            {PAYMENTS_ENABLED && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("sell.listingType")} *</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => updateDraft({ listingType: "free" })}
+                    className={`p-4 rounded-xl border text-center transition-all ${
+                      draft.listingType === "free"
+                        ? "border-primary bg-primary/10 ring-1 ring-primary"
+                        : "border-border bg-card hover:border-primary/40"
+                    }`}
+                  >
+                    <Clock className={`h-5 w-5 mx-auto mb-1.5 ${draft.listingType === "free" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-sm font-display font-bold block ${draft.listingType === "free" ? "text-primary" : "text-foreground"}`}>
+                      {t("sell.freeListing")}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground block mt-1">{t("sell.freeTag")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateDraft({ listingType: "paid" })}
+                    className={`p-4 rounded-xl border text-center transition-all ${
+                      draft.listingType === "paid"
+                        ? "border-primary bg-primary/10 ring-1 ring-primary"
+                        : "border-border bg-card hover:border-primary/40"
+                    }`}
+                  >
+                    <Sparkles className={`h-5 w-5 mx-auto mb-1.5 ${draft.listingType === "paid" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-sm font-display font-bold block ${draft.listingType === "paid" ? "text-primary" : "text-foreground"}`}>
+                      {t("sell.paidListing")}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground block mt-1">
+                      {CATALOG_DISPLAY.premium.priceLabel} • {CATALOG_DISPLAY.premium.durationLabel}
+                    </span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <p className="text-[11px] text-muted-foreground/60 text-center">{t("sell.draftAutoSaved")}</p>
 

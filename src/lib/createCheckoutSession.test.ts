@@ -5,6 +5,14 @@ import {
   createCheckoutSession,
 } from "@/lib/createCheckoutSession";
 
+vi.mock("@/config/features", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/config/features")>();
+  return {
+    ...actual,
+    PAYMENTS_ENABLED: true,
+  };
+});
+
 describe("createCheckoutSession", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
@@ -85,5 +93,21 @@ describe("createCheckoutSession", () => {
         accessToken: "",
       }),
     ).rejects.toBeInstanceOf(CheckoutAuthError);
+  });
+
+  it("surfaces server 503 payments-disabled message", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: "Payments are temporarily disabled" }),
+    } as Response);
+
+    await expect(
+      createCheckoutSession({
+        productId: "x",
+        entitlementType: "premium",
+        accessToken: "jwt",
+      }),
+    ).rejects.toThrow("Payments are temporarily disabled");
   });
 });
